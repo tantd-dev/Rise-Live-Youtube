@@ -44,7 +44,7 @@ Trong giao diện:
 1. Tab **Máy live** → Thêm máy (IP nhập 127.0.0.1, trần băng thông đặt theo upload thật của mạng) → ghi lại **mã máy**.
 2. Terminal 3 (Ubuntu/WSL):
    ```bash
-   RISE_LIVE_MACHINE=<mã máy> RISE_LIVE_TOKEN=<giá trị RISE_LIVE_WORKER_TOKEN> npm run worker
+   RISE_LIVE_MACHINE=<mã máy> RISE_LIVE_TOKEN="giá trị RISE_LIVE_WORKER_TOKEN" npm run worker
    ```
    Máy chuyển sang **Online** sau vài giây là worker đã nối được.
 3. Tab **Kho video** → thêm video thử (dùng link Google Drive cho bản thử; tải thẳng từ trình duyệt lên VPS có thể đòi HTTPS qua Caddy, chưa kiểm). Chờ trạng thái sẵn sàng.

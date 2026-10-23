@@ -2490,6 +2490,28 @@ function CodesPanel() {
   );
 }
 
+// MÃ MÁY + nút copy — mã này điền vào RISE_LIVE_MACHINE khi chạy worker (npm run worker / .env.local).
+// navigator.clipboard chỉ chạy trên https/localhost → mở bằng http://IP thì lùi về execCommand("copy").
+function MachineIdCopy({ id }: { id: string }) {
+  const [ok, setOk] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(id); }
+    catch {
+      const ta = document.createElement("textarea"); ta.value = id; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } finally { document.body.removeChild(ta); }
+    }
+    setOk(true); setTimeout(() => setOk(false), 1500);
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3, fontSize: 11, whiteSpace: "nowrap" }}>
+      <span style={{ color: "var(--muted)" }}>Mã máy:</span>
+      <code style={{ fontSize: 11, userSelect: "all" }}>{id}</code>
+      <button type="button" onClick={copy} title="Copy mã máy (dùng cho RISE_LIVE_MACHINE khi chạy worker)" style={{ border: "1px solid var(--border,#e2e7ee)", background: "var(--card)", borderRadius: 6, padding: "0 6px", fontSize: 10.5, cursor: "pointer", color: ok ? "#16a34a" : "inherit" }}>{ok ? "✓ Đã copy" : "📋 Copy"}</button>
+    </div>
+  );
+}
+
 function MachineName({ m, post, busy }: any) {
   const [edit, setEdit] = useState(false); const [v, setV] = useState(m.name || "");
   if (!edit) return <b onClick={() => { setV(m.name || ""); setEdit(true); }} style={{ cursor: "pointer" }} title="Bấm để đổi tên">{m.name} <span style={{ fontSize: 10, color: "var(--muted)" }}>✎</span></b>;
@@ -2648,7 +2670,7 @@ function MachinesPanel({ machines, streams, post, busy, canInfra, uploadToken, e
               <tbody>
                 {machines.map((m: any) => (
                   <tr key={m.id}>
-                    <td>{canInfra ? <MachineName m={m} post={post} busy={busy} /> : <b>{m.name}</b>}</td>
+                    <td>{canInfra ? <MachineName m={m} post={post} busy={busy} /> : <b>{m.name}</b>}{canInfra && <MachineIdCopy id={m.id} />}</td>
                     <td><code style={{ fontSize: 11 }}>{m.ip}</code></td>
                     <td>{m.role === "live-pub" ? "Live Pub" : m.role === "shared" ? "Dùng chung" : "Live 24/7"}</td>
                     <td style={{ fontSize: 12 }}>{canInfra ? <><MachinePlace m={m} post={post} busy={busy} /><div style={{ marginTop: 2 }}><MachineUpload m={m} post={post} busy={busy} /></div></> : ([m.provider, m.region].filter(Boolean).join(" · ") || "—")}</td>
