@@ -54,7 +54,7 @@ Trong giao diện:
 ## Lưu ý an toàn
 
 - Dùng **kênh YouTube thử**, không dùng kênh thật. Kênh phải bật tính năng live (lần đầu có thể chờ ~24 giờ).
-- Worker chạy dưới `sudo` vì code gốc dùng thư mục cứng `/root/rise-live`.
+- Worker chạy bằng user thường (không `sudo`): dữ liệu (`assets/`, `raw/`, `logs/`…) nằm ở thư mục gốc repo.
 - Mạng công ty có thể chặn RTMP (cổng 1935). Cần báo IT trước khi test.
 - Mỗi lần test xong nhớ **dừng worker** để không đẩy luồng ngoài ý muốn.
 

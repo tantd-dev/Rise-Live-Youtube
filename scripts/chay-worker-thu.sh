@@ -35,4 +35,6 @@ done
 command -v yt-dlp >/dev/null || echo "Cảnh báo: chưa có yt-dlp (cần khi tải video từ Google Drive): pip3 install -U -r $HERE/public/requirements.txt"
 
 echo "Worker → $RISE_LIVE_URL  (máy: $RISE_LIVE_MACHINE)"
-exec sudo -E python3 "$HERE/public/rise-live-agent.py"
+# KHÔNG dùng sudo: worker lưu dữ liệu cạnh repo (BASE theo vị trí file), không cần quyền root.
+# (sudo -E còn làm MẤT biến môi trường trên Ubuntu mới dùng sudo-rs → worker báo "Thieu RISE_LIVE_...".)
+exec python3 "$HERE/public/rise-live-agent.py"

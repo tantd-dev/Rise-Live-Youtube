@@ -6,3 +6,8 @@ node_modules
 firebase-debug.log
 firestore-debug.log
 assets/*
+# Du lieu worker khi chay thu (BASE = thu muc goc repo)
+raw/
+thumbs/
+logs/
+playlists/
