@@ -187,7 +187,26 @@ def _doc_ban_cong_cu():
     tool_state["gdown"] = bool(shutil.which("gdown"))
     tool_state["updatedAt"] = time.time()
 
+# def _pip_chay():
+#     # Tim cach goi pip. Tra ve list lenh, hoac None neu may KHONG co pip nao ca.
+#     #  1) pipx (neu yt-dlp da cai qua pipx) -> khong sua package do Ubuntu/Debian quan ly.
+#     #  2) pip3 (chuan)  3) python3 -m pip (khi thieu lenh pip3 nhung co module).
+#     # Truoc day CHI tim ~/.local/bin/pipx -> may co pip3 van bi bao "KHONG co pip3" (bao oan).
+#     pipx = shutil.which("pipx") or os.path.expanduser("~/.local/bin/pipx")
+#     if os.path.isfile(pipx):
+#         return [pipx, "runpip", "yt-dlp"]
+#     if shutil.which("pip3"):
+#         return ["pip3"]
+#     try:
+#         r = subprocess.run([sys.executable or "python3", "-m", "pip", "--version"], capture_output=True, text=True, timeout=30)
+#         if r.returncode == 0:
+#             return [sys.executable or "python3", "-m", "pip"]
+#     except Exception:
+#         pass
+#     return None\
 def _pip_chay():
+    # Uu tien pipx de khong sua package do Ubuntu/Debian quan ly.
+    pipx = os.path.expanduser("~/.local/bin/pipx")
     # Tim cach goi pip. Tra ve list lenh, hoac None neu may KHONG co pip nao ca.
     #  1) pipx (neu yt-dlp da cai qua pipx) -> khong sua package do Ubuntu/Debian quan ly.
     #  2) pip3 (chuan)  3) python3 -m pip (khi thieu lenh pip3 nhung co module).
@@ -195,6 +214,7 @@ def _pip_chay():
     pipx = shutil.which("pipx") or os.path.expanduser("~/.local/bin/pipx")
     if os.path.isfile(pipx):
         return [pipx, "runpip", "yt-dlp"]
+
     if shutil.which("pip3"):
         return ["pip3"]
     try:
