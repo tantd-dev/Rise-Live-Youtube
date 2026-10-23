@@ -1,0 +1,105 @@
+<title>Rise Live — Benchmark #1: Hướng dẫn chạy</title>
+<style>
+  :root{--bg:#f5f6f8;--surface:#fff;--surface2:#fbfcfd;--ink:#0e1420;--muted:#5a6472;--border:#e4e8ee;--accent:#0e8f84;--accent-soft:#d6f1ee;--ok:#15803d;--ok-bg:#e7f6ec;--warn:#b45309;--warn-bg:#fdf3e3;--crit:#c0273a;--crit-bg:#fdeaec;--info:#1d4ed8;--info-bg:#e8eefc;--mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0f14;--surface:#131922;--surface2:#0f151d;--ink:#e7ecf3;--muted:#8b96a6;--border:#222c39;--accent:#2dd4bf;--accent-soft:#0f2f2c;--ok:#4ade80;--ok-bg:#0f2418;--warn:#fbbf24;--warn-bg:#2a2007;--crit:#fb7185;--crit-bg:#2c1015;--info:#7aa2f7;--info-bg:#0f1a33}}
+  :root[data-theme="dark"]{--bg:#0b0f14;--surface:#131922;--surface2:#0f151d;--ink:#e7ecf3;--muted:#8b96a6;--border:#222c39;--accent:#2dd4bf;--accent-soft:#0f2f2c;--ok:#4ade80;--ok-bg:#0f2418;--warn:#fbbf24;--warn-bg:#2a2007;--crit:#fb7185;--crit-bg:#2c1015;--info:#7aa2f7;--info-bg:#0f1a33}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px;margin:0}
+  .wrap{max-width:820px;margin:0 auto;padding:44px 22px 100px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:clamp(26px,5vw,38px);line-height:1.12;letter-spacing:-.02em;margin:.3em 0 .2em;text-wrap:balance}
+  h2{font-size:20px;margin:2em 0 .4em;padding-top:.5em;border-top:2px solid var(--border)}
+  .lede{font-size:17px;color:var(--muted);max-width:64ch}
+  p{margin:.6em 0} a{color:var(--accent)}
+  code{font-family:var(--mono);font-size:.88em;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:.06em .38em}
+  pre{background:#0f151d;color:#e7ecf3;border:1px solid var(--border);border-radius:11px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.55}
+  :root:not([data-theme="dark"]) pre{background:#0f151d}
+  .step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin:16px 0;position:relative}
+  .step .n{position:absolute;left:-13px;top:18px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  .step h3{margin:.1em 0 .4em;font-size:17px}
+  @media(max-width:560px){.step .n{left:8px;top:-13px}.step{padding-top:26px}}
+  .callout{border-radius:12px;padding:13px 17px;margin:14px 0;border:1px solid;font-size:14.5px}
+  .c-note{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+  .c-warn{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+  .c-info{background:var(--info-bg);border-color:color-mix(in srgb,var(--info) 40%,transparent)}
+  .tag{font-weight:700;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px}
+  .c-note .tag{color:var(--accent)}.c-warn .tag{color:var(--warn)}.c-info .tag{color:var(--info)}
+  ul,ol{padding-left:1.2em} li{margin:.3em 0}
+  .meta{color:var(--muted);font-size:13px;font-family:var(--mono)}
+  b,strong{font-weight:650}
+  .foot{color:var(--muted);font-size:13px;margin-top:50px;border-top:1px solid var(--border);padding-top:16px}
+</style>
+<div class="wrap">
+<div class="eyebrow">Rise Live · Benchmark #1</div>
+<h1>Đo năng lực 1 VPS — hướng dẫn chạy</h1>
+<p class="lede">Đây là cổng để mở khóa mọi con số quy mô: <strong>1 VPS thật gánh được bao nhiêu luồng</strong>, và LowEndViet có "1Gbps thật" hay không. Làm 1 lần trên 1 máy test — rẻ, an toàn, không đụng gì tới hệ đang chạy.</p>
+<p class="meta">Cần: 1 VPS Ubuntu/Debian (2TB/1G như dự kiến) · vài buổi live YouTube TEST (không dùng kênh thật) · ~30 phút. Không cần biết code — copy/paste theo từng bước.</p>
+
+<div class="callout c-info"><span class="tag">Không rành SSH cũng làm được</span>Mỗi bước chỉ là <strong>copy → dán → Enter</strong>. Nếu vướng ở bước nào, chụp màn hình gửi tôi, tôi chỉ đúng lệnh. Hoặc nhờ một bạn IT chạy hộ theo đúng bài này.</div>
+
+<h2>Chuẩn bị</h2>
+<ul>
+  <li><strong>Mua 1 VPS</strong> (LowEndViet hoặc nhà bro định dùng) — chọn <strong>Ubuntu 22.04</strong>, cấu hình như dự kiến (2TB, 1Gbps). Nhà cung cấp sẽ gửi <strong>IP + user (root) + mật khẩu</strong>.</li>
+  <li><strong>File script</strong> <code>rise-bench.sh</code> (tôi gửi kèm) — sẽ đưa lên VPS ở Bước 2.</li>
+  <li><strong>3–10 buổi live YouTube TEST</strong> để lấy "stream key" (Bước 3). Dùng kênh test/phụ, KHÔNG dùng kênh thật.</li>
+</ul>
+
+<div class="step"><div class="n">1</div>
+<h3>Kết nối vào VPS</h3>
+<p>Trên máy tính của bro, mở <strong>Terminal</strong> (Windows: PowerShell) và gõ (thay <code>IP</code> bằng IP nhà cung cấp gửi):</p>
+<pre>ssh root@IP_CUA_VPS</pre>
+<p>Lần đầu hỏi "yes/no" → gõ <code>yes</code>. Sau đó dán mật khẩu (dán vào Terminal không hiện ký tự — cứ dán rồi Enter).</p>
+</div>
+
+<div class="step"><div class="n">2</div>
+<h3>Đưa script lên VPS &amp; đo máy (nhanh, chưa cần YouTube)</h3>
+<p>Cách dễ nhất: mở file <code>rise-bench.sh</code> tôi gửi, copy TOÀN BỘ nội dung. Trên VPS gõ:</p>
+<pre>nano rise-bench.sh</pre>
+<p>Dán nội dung vào → nhấn <code>Ctrl+O</code>, Enter (lưu) → <code>Ctrl+X</code> (thoát). Rồi chạy:</p>
+<pre>sudo bash rise-bench.sh probe</pre>
+<p>Nó sẽ in: số nhân CPU, RAM, <strong>tốc độ đọc ổ đĩa</strong>, và <strong>băng thông tải lên cơ sở</strong> (kèm ước tính "~bao nhiêu luồng theo băng thông"). Chụp lại kết quả.</p>
+<div class="callout c-warn"><span class="tag">Đây mới là cơ sở</span>Con số ở bước này chưa phải kết luận — băng thông "cơ sở" đo tới máy đo gần đó, không phải tới YouTube. Bước 4 mới là phép thử THẬT.</div>
+</div>
+
+<div class="step"><div class="n">3</div>
+<h3>Tạo vài buổi live TEST trên YouTube → lấy "stream key"</h3>
+<ol>
+  <li>Vào <strong>YouTube Studio → Tạo → Phát trực tiếp (Go live)</strong>.</li>
+  <li>Tạo một buổi live <strong>để chế độ Riêng tư (Private)</strong>, đặt tên "TEST 1". Copy phần <strong>Khóa luồng (Stream key)</strong>.</li>
+  <li>Lặp lại để có <strong>5–10 key</strong> (mỗi luồng đồng thời cần 1 key riêng). Đặt TEST 2, TEST 3…</li>
+  <li>Trên VPS, tạo file <code>keys.txt</code>: gõ <code>nano keys.txt</code> → dán <strong>mỗi key một dòng</strong> → lưu (Ctrl+O, Enter, Ctrl+X).</li>
+</ol>
+<div class="callout c-note"><span class="tag">Mẹo</span>Muốn sát thực tế nhất, đưa lên VPS 1 file nhạc <code>*_ready.mp4</code> thật của Rise (Bước 4 sẽ test <strong>copy-codec</strong> — đúng cách Rise Live chạy, rất nhẹ CPU). Không có cũng chạy được (script tự tạo luồng test).</div>
+</div>
+
+<div class="step"><div class="n">4</div>
+<h3>Đo phát RTMP thật tới YouTube (tăng dần số luồng)</h3>
+<p>Chạy (120 = số giây mỗi mức; thêm đường dẫn file nếu có):</p>
+<pre>sudo bash rise-bench.sh rtmp keys.txt 120
+# hoặc test copy-codec đúng thực tế:
+sudo bash rise-bench.sh rtmp keys.txt 120 /root/mot_bai_ready.mp4</pre>
+<p>Script sẽ chạy <strong>1 luồng, rồi 2, rồi 3…</strong> lên tới số key bro có, và in bảng: mỗi mức có <strong>bao nhiêu luồng còn sống</strong>, <strong>egress (Mbps)</strong>, <strong>tải CPU</strong>. Khi bắt đầu có luồng rớt, nó dừng và báo <strong>"máy giữ ổn định tối đa ~N luồng"</strong>.</p>
+<div class="callout c-warn"><span class="tag">Chạy ở vài khung giờ</span>Băng thông VPS giá rẻ hay tụt vào giờ cao điểm. Chạy lại Bước 4 vào <strong>sáng / trưa / tối</strong> để biết mức ổn định THẬT, không chỉ lúc vắng.</div>
+</div>
+
+<div class="step"><div class="n">5</div>
+<h3>Gửi kết quả cho tôi</h3>
+<p>Chụp/copy 2 thứ: kết quả <strong>probe</strong> (Bước 2) và <strong>bảng ramp</strong> (Bước 4, ở vài khung giờ). Gửi lại — tôi tính ra ngay:</p>
+<ul>
+  <li>1 VPS này gánh ổn định bao nhiêu luồng (theo profile thật).</li>
+  <li>Cần bao nhiêu VPS cho <strong>200</strong> và <strong>500</strong> luồng (kèm dự phòng).</li>
+  <li>LowEndViet có "gánh" nổi không hay nên đổi/bổ sung nhà mạnh hơn.</li>
+</ul>
+<p>Có mấy số đó là mình <strong>chốt được cấu hình pilot R1</strong> và bắt đầu dựng thật.</p>
+</div>
+
+<h2>An toàn &amp; lưu ý</h2>
+<ul>
+  <li>Đây là <strong>test độc lập</strong> — không đụng Rise Work, không đụng dịch vụ live đang thuê.</li>
+  <li>Dùng <strong>kênh/buổi live TEST</strong> (Private), không phát lên kênh thật.</li>
+  <li>Xong test thì <strong>dừng các buổi live</strong> trên YouTube Studio cho gọn.</li>
+  <li>VPS test dùng xong có thể giữ lại làm Worker pilot, hoặc hủy — tùy bro.</li>
+</ul>
+
+<p class="foot">Rise Live · Benchmark #1 runbook · Gắn với tài liệu R0 (Architecture REVIEWED · Inventory IN PROGRESS). Chưa code R1 cho tới khi có số benchmark + cấu hình pilot.</p>
+</div>

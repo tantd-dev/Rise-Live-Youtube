@@ -1,0 +1,219 @@
+<title>Rise Live — Control Center (bản test thao tác)</title>
+<style>
+  :root{
+    --bg:#0a0e13;--panel:#111721;--panel2:#0e141d;--line:#1e2733;--ink:#e6ecf4;--dim:#8b97a8;--faint:#5c6675;
+    --accent:#2dd4bf;--ok:#34d399;--ok-bg:#0f2a22;--warn:#fbbf24;--warn-bg:#2a2109;--crit:#fb7185;--crit-bg:#2b1017;
+    --info:#60a5fa;--info-bg:#0e1e33;--heal:#c084fc;--heal-bg:#1e1233;--idle:#64748b;--idle-bg:#161c25;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  :root[data-theme="light"]{--bg:#eef1f5;--panel:#fff;--panel2:#f7f9fb;--line:#e2e7ee;--ink:#0e1420;--dim:#5a6472;--faint:#8b96a6;--ok-bg:#e7f6ec;--warn-bg:#fdf3e3;--crit-bg:#fdeaec;--info-bg:#e8eefc;--heal-bg:#f1eafc;--idle-bg:#eef1f5;--ok:#15803d;--warn:#b45309;--crit:#c0273a;--info:#1d4ed8;--heal:#7c3aed;--accent:#0e8f84}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+  .flag{background:var(--warn);color:#1a1206;text-align:center;font-size:12px;font-weight:700;padding:5px;letter-spacing:.02em}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 16px 70px}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 0 10px}
+  .brand{font-weight:800;font-size:19px} .brand span{color:var(--accent)}
+  .dom{font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .sys{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 13px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:4px 0 16px}
+  .tab{padding:9px 15px;font-size:13.5px;font-weight:600;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.on{color:var(--ink);border-bottom-color:var(--accent)}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin:20px 2px 10px;font-weight:700}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:9px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+  .kpi .v{font-family:var(--mono);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .kpi .l{font-size:11.5px;color:var(--dim);margin-top:1px}
+  .kpi.acc .v{color:var(--accent)}.kpi.ok .v{color:var(--ok)}.kpi.warn .v{color:var(--warn)}.kpi.crit .v{color:var(--crit)}.kpi.heal .v{color:var(--heal)}.kpi.info .v{color:var(--info)}
+  .bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12.5px;color:var(--dim);cursor:pointer;user-select:none}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#04211d;font-weight:650}
+  .btn{background:var(--accent);color:#04211d;border:none;border-radius:9px;padding:8px 15px;font-weight:700;font-size:13px;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+  .btn.sm{padding:5px 10px;font-size:12px;border-radius:7px}
+  .tbl{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .row{display:grid;grid-template-columns:1.8fr 1.15fr .8fr .7fr .6fr 1fr 1.5fr;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);align-items:center}
+  .row.head{background:var(--panel2);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700}
+  .row:last-child{border-bottom:none}
+  .nm{font-weight:600}.sub{font-size:11.5px;color:var(--faint);margin-top:1px;font-family:var(--mono)}
+  .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .st b{width:7px;height:7px;border-radius:50%}
+  .s-ok{background:var(--ok-bg);color:var(--ok)}.s-ok b{background:var(--ok);box-shadow:0 0 7px var(--ok)}
+  .s-warn{background:var(--warn-bg);color:var(--warn)}.s-warn b{background:var(--warn)}
+  .s-crit{background:var(--crit-bg);color:var(--crit)}.s-crit b{background:var(--crit);box-shadow:0 0 7px var(--crit)}
+  .s-heal{background:var(--heal-bg);color:var(--heal)}.s-heal b{background:var(--heal)}
+  .s-info{background:var(--info-bg);color:var(--info)}.s-info b{background:var(--info)}
+  .s-idle{background:var(--idle-bg);color:var(--idle)}.s-idle b{background:var(--idle)}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12.5px}
+  .rr{color:var(--crit);font-weight:700}
+  .prov{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .tag{font-size:10px;padding:1px 6px;border-radius:5px;background:var(--panel2);border:1px solid var(--line);color:var(--dim);font-family:var(--mono)}
+  .crit-tag{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 40%,transparent)}
+  .acts{display:flex;gap:5px;flex-wrap:wrap}
+  .cols2{display:grid;grid-template-columns:1fr;gap:16px}@media(min-width:900px){.cols2{grid-template-columns:2.4fr 1fr}}
+  .wk{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px}
+  .wk .wn{font-weight:650;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+  .meter{height:6px;border-radius:4px;background:var(--line);margin:7px 0 2px;overflow:hidden}.meter i{display:block;height:100%}
+  .mlab{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);font-family:var(--mono)}
+  .note{font-size:12px;color:var(--faint);margin:8px 2px 0;line-height:1.5}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:440px;width:100%}
+  .card h3{margin:0 0 14px}
+  label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px;font-weight:600}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 11px;font-size:13.5px;font-family:var(--sans)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--accent);color:var(--ink);padding:10px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.3);opacity:0;transition:opacity .2s;z-index:60;pointer-events:none}
+  .toast.show{opacity:1}
+  .hide{display:none!important}
+  @media(max-width:760px){.row{grid-template-columns:1.5fr 1.1fr;row-gap:7px}.row.head{display:none}.hm{display:none}.acts{grid-column:1/-1}}
+</style>
+<div class="flag">● BẢN TEST THAO TÁC (mockup) — bấm Tạo luồng / Start / Stop / Restart / lọc để thử. Dữ liệu giả, CHƯA nối backend.</div>
+<div class="wrap">
+  <div class="top">
+    <div><div class="brand">Rise <span>Live</span> · Control Center</div><div class="dom">live.<TEN-MIEN-CUA-BAN></div></div>
+    <div class="sys"><span class="dot"></span> <span id="sysline">Cụm khỏe</span></div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" data-tab="ov">Tổng quan</div>
+    <div class="tab" data-tab="st">Luồng</div>
+    <div class="tab" data-tab="wk">Worker / VPS</div>
+  </div>
+
+  <section id="tab-ov">
+    <h2 style="margin-top:0">Tổng quan cụm</h2>
+    <div class="kpis" id="kpis"></div>
+    <p class="note">Số ở đây tự tính lại theo trạng thái các luồng bên tab <b>Luồng</b> — bro Stop/Start/Restart là thấy đổi ngay.</p>
+  </section>
+
+  <section id="tab-st" class="hide">
+    <div class="bar">
+      <button class="btn" onclick="openCreate()">＋ Tạo luồng</button>
+      <span style="width:8px"></span>
+      <span class="chip on" data-f="all">Tất cả</span>
+      <span class="chip" data-f="alert">Cần chú ý</span>
+      <span class="chip" data-f="critical">Critical</span>
+      <span class="chip" data-f="247">24/7</span>
+      <span class="chip" data-f="nha">Nhả</span>
+    </div>
+    <div class="tbl">
+      <div class="row head"><span>Luồng · Kênh</span><span>Trạng thái</span><span>Bitrate</span><span class="hm">Uptime</span><span class="hm">Restart</span><span class="hm">Worker</span><span>Thao tác</span></div>
+      <div id="streamRows"></div>
+    </div>
+    <p class="note">Nguyên tắc R0 minh họa: luồng <b style="color:var(--crit)">restart nhiều</b> hiện <b>Mất tín hiệu</b> (đỏ), không giả vờ "xanh". Bấm <b>Restart</b> để nó tự phục hồi.</p>
+  </section>
+
+  <section id="tab-wk" class="hide">
+    <h2 style="margin-top:0">Worker / VPS</h2>
+    <div id="workers"></div>
+    <p class="note">Mỗi Worker xếp theo tài nguyên thật (băng thông/CPU/đĩa), giữ ≥25% dự phòng. Máy lỗi tự drain → chuyển luồng, ưu tiên Critical.</p>
+  </section>
+</div>
+
+<div id="modal" class="modal hide">
+  <div class="card">
+    <h3>＋ Tạo luồng mới</h3>
+    <label>Tên luồng</label><input id="f-name" placeholder="VD: Deep Sleep 24/7 · 13/8">
+    <label>Kênh / đơn vị</label>
+    <select id="f-group"><option>KDH</option><option>Mario</option><option>Violin</option><option>GAME</option></select>
+    <label>Loại live</label>
+    <select id="f-type"><option value="247">Live 24/7</option><option value="pub">Live Public (lịch)</option><option value="nha">Live nhả</option></select>
+    <label>Chất lượng (profile)</label>
+    <select id="f-profile"><option>Full HD (5 Mbps)</option><option>2K (10 Mbps)</option><option>4K (20 Mbps)</option></select>
+    <label>Mức quan trọng</label>
+    <select id="f-imp"><option value="standard">Tiêu chuẩn</option><option value="high">Cao</option><option value="critical">Critical (có dự phòng)</option></select>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn" style="flex:1" onclick="createStream()">Tạo &amp; khởi động</button>
+      <button class="btn ghost" onclick="closeCreate()">Hủy</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const PROF_BR = {"Full HD (5 Mbps)":5000,"2K (10 Mbps)":10000,"4K (20 Mbps)":20000};
+let streams = [
+  {id:1,name:"Deep Sleep & Healing 1",group:"KDH",type:"247",imp:"critical",br:0,up:"3h54m",rr:46,wk:"wk-03 · LowEndViet",status:"crit"},
+  {id:2,name:"Summer 12-08 cẩm",group:"KDH",type:"247",imp:"standard",br:5001,up:"5h03m",rr:2,wk:"wk-01 · LowEndViet",status:"ok"},
+  {id:3,name:"Mario Stories 11/8",group:"Mario",type:"247",imp:"critical",br:4690,up:"3h53m",rr:5,wk:"wk-07 · Vultr",status:"heal"},
+  {id:4,name:"R&J Family 12.8",group:"KDH",type:"247",imp:"standard",br:4815,up:"3h53m",rr:2,wk:"wk-04 · LowEndViet",status:"warn"},
+  {id:5,name:"Live Mario 10.8 (4K)",group:"Mario",type:"pub",imp:"high",br:19905,up:"3h53m",rr:0,wk:"wk-11 · Vultr",status:"ok"},
+  {id:6,name:"12/8 cẩm — rumi béo",group:"KDH",type:"nha",imp:"standard",br:0,up:"—",rr:0,wk:"—",status:"info"},
+  {id:7,name:"KDH Songs 12.8",group:"KDH",type:"247",imp:"standard",br:0,up:"—",rr:0,wk:"—",status:"idle"},
+  {id:8,name:"Violin Deep Focus",group:"Violin",type:"247",imp:"standard",br:5000,up:"6h12m",rr:1,wk:"wk-02 · LowEndViet",status:"ok"},
+];
+let nextId=9, filter="all";
+const STLABEL={ok:"Khỏe",warn:"Cảnh báo",crit:"Mất tín hiệu",heal:"Đang tự phục hồi",info:"Chờ lịch",idle:"Đã dừng"};
+const workers=[
+  {n:"wk-01",prov:"LowEndViet",used:82,c:"var(--warn)",lo:"42 luồng · CPU 44%",bw:"612 / 750 Mbps",st:"ok"},
+  {n:"wk-07",prov:"Vultr",used:65,c:"var(--ok)",lo:"31 luồng · CPU 33%",bw:"488 / 750 Mbps",st:"ok"},
+  {n:"wk-03",prov:"LowEndViet",used:96,c:"var(--crit)",lo:"Đang drain → chuyển luồng",bw:"tụt · mất gói",st:"crit"},
+];
+const $=(s)=>document.querySelector(s);
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove("show"),1800);}
+
+function renderKPIs(){
+  const c={ok:0,warn:0,crit:0,heal:0,info:0,idle:0,critical:0,live:0,br:0};
+  streams.forEach(s=>{c[s.status]++; if(s.imp==="critical")c.critical++; if(["ok","warn","heal"].includes(s.status)){c.live++;c.br+=s.br;}});
+  const k=[["acc",streams.length,"Tổng luồng"],["ok",c.ok,"Khỏe"],["warn",c.warn,"Cảnh báo"],["crit",c.crit,"Mất tín hiệu"],["heal",c.heal,"Đang tự phục hồi"],["info",c.info,"Chờ lịch"],["crit",c.critical,"Luồng Critical"],["",(c.br/1000000).toFixed(2)+" Gbps","Tổng bitrate"],["",Math.round(c.live/(c.live+8+40)*100)+"%","Công suất dùng"],["",c.crit+c.warn,"Cần chú ý"]];
+  $("#kpis").innerHTML=k.map(x=>`<div class="kpi ${x[0]}"><div class="v">${x[1]}</div><div class="l">${x[2]}</div></div>`).join("");
+  $("#sysline").textContent = c.crit>0? `${c.crit} luồng mất tín hiệu · ${c.heal} đang phục hồi` : "Cụm khỏe";
+}
+function stMatch(s){
+  if(filter==="all")return true;
+  if(filter==="alert")return ["warn","crit","heal"].includes(s.status);
+  if(filter==="critical")return s.imp==="critical";
+  return s.type===filter;
+}
+function renderStreams(){
+  $("#streamRows").innerHTML = streams.filter(stMatch).map(s=>{
+    const critTag=s.imp==="critical"?` <span class="tag crit-tag">CRITICAL</span>`:"";
+    const typeL={"247":"24/7","pub":"Public","nha":"Nhả"}[s.type];
+    const running=["ok","warn","crit","heal"].includes(s.status);
+    const acts = s.status==="idle"||s.status==="info"
+      ? `<button class="btn sm" onclick="act(${s.id},'start')">▶ Start</button>`
+      : `<button class="btn sm ghost" onclick="act(${s.id},'restart')">⟳ Restart</button><button class="btn sm ghost" onclick="act(${s.id},'stop')">■ Stop</button>`;
+    return `<div class="row">
+      <div><div class="nm">${s.name}${critTag}</div><div class="sub">${s.group} · ${typeL}</div></div>
+      <span><span class="st s-${s.status}"><b></b>${STLABEL[s.status]}</span></span>
+      <span class="num">${s.br?s.br.toLocaleString()+" kbps":"—"}</span>
+      <span class="num hm">${s.up}</span>
+      <span class="num hm ${s.rr>=10?'rr':''}">${s.rr} ⟳</span>
+      <span class="prov hm">${s.wk}</span>
+      <span class="acts">${acts}</span>
+    </div>`;
+  }).join("") || `<div class="row"><span style="color:var(--faint)">Không có luồng nào khớp bộ lọc.</span></div>`;
+}
+function renderWorkers(){
+  $("#workers").innerHTML=workers.map(w=>`<div class="wk">
+    <div class="wn">${w.n} <span class="st s-${w.st}" style="padding:1px 8px"><b></b>${w.st==="ok"?"khỏe":"lỗi"}</span></div>
+    <div class="mlab"><span>Băng thông</span><span>${w.bw}</span></div>
+    <div class="meter"><i style="width:${w.used}%;background:${w.c}"></i></div>
+    <div class="mlab" style="margin-top:6px"><span>${w.lo}</span><span>${w.prov}</span></div>
+  </div>`).join("");
+}
+function renderAll(){renderKPIs();renderStreams();renderWorkers();}
+function act(id,a){
+  const s=streams.find(x=>x.id===id);if(!s)return;
+  if(a==="stop"){s.status="idle";s.br=0;s.up="—";s.wk="—";toast(`Đã dừng "${s.name}"`);}
+  if(a==="start"){s.status="ok";s.br=5000;s.up="0m";s.wk="wk-01 · LowEndViet";toast(`Đã khởi động "${s.name}"`);}
+  if(a==="restart"){s.rr++;s.status="heal";s.br=0;toast(`Đang tự phục hồi "${s.name}"…`);setTimeout(()=>{s.status="ok";s.br=s.imp==="high"?19905:5000;renderAll();},1400);}
+  renderAll();
+}
+function openCreate(){$("#modal").classList.remove("hide");}
+function closeCreate(){$("#modal").classList.add("hide");}
+function createStream(){
+  const name=$("#f-name").value.trim()||"Luồng mới";
+  const prof=$("#f-profile").value;
+  streams.unshift({id:nextId++,name,group:$("#f-group").value,type:$("#f-type").value,imp:$("#f-imp").value,br:PROF_BR[prof],up:"0m",rr:0,wk:"wk-07 · Vultr",status:"ok"});
+  $("#f-name").value="";closeCreate();
+  document.querySelector('.tab[data-tab="st"]').click();
+  toast(`Đã tạo & khởi động "${name}"`);renderAll();
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");
+  ["ov","st","wk"].forEach(k=>$("#tab-"+k).classList.toggle("hide",k!==t.dataset.tab));
+});
+document.querySelectorAll(".chip[data-f]").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll(".chip[data-f]").forEach(x=>x.classList.remove("on"));c.classList.add("on");filter=c.dataset.f;renderStreams();
+});
+renderAll();
+</script>

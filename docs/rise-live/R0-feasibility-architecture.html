@@ -1,0 +1,619 @@
+<title>Rise Live — R0: Đánh giá khả thi & Kiến trúc</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --surface:#ffffff; --surface2:#fbfcfd; --ink:#0e1420; --muted:#5a6472;
+    --border:#e4e8ee; --accent:#0e8f84; --accent-soft:#d6f1ee;
+    --ok:#15803d; --ok-bg:#e7f6ec; --warn:#b45309; --warn-bg:#fdf3e3; --crit:#c0273a; --crit-bg:#fdeaec;
+    --info:#1d4ed8; --info-bg:#e8eefc; --standby:#6d28d9; --standby-bg:#f1eafc;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#0b0f14; --surface:#131922; --surface2:#0f151d; --ink:#e7ecf3; --muted:#8b96a6;
+    --border:#222c39; --accent:#2dd4bf; --accent-soft:#0f2f2c;
+    --ok:#4ade80; --ok-bg:#0f2418; --warn:#fbbf24; --warn-bg:#2a2007; --crit:#fb7185; --crit-bg:#2c1015;
+    --info:#7aa2f7; --info-bg:#0f1a33; --standby:#c4b5fd; --standby-bg:#1c1533;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0b0f14; --surface:#131922; --surface2:#0f151d; --ink:#e7ecf3; --muted:#8b96a6;
+    --border:#222c39; --accent:#2dd4bf; --accent-soft:#0f2f2c;
+    --ok:#4ade80; --ok-bg:#0f2418; --warn:#fbbf24; --warn-bg:#2a2007; --crit:#fb7185; --crit-bg:#2c1015;
+    --info:#7aa2f7; --info-bg:#0f1a33; --standby:#c4b5fd; --standby-bg:#1c1533;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px;margin:0;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:44px 22px 120px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:clamp(28px,5vw,42px);line-height:1.1;letter-spacing:-.02em;margin:.3em 0 .2em;text-wrap:balance}
+  h2{font-size:22px;letter-spacing:-.01em;margin:2.6em 0 .5em;padding-top:.6em;border-top:2px solid var(--border);scroll-margin-top:16px}
+  h2 .num{color:var(--accent);font-variant-numeric:tabular-nums;margin-right:.35em}
+  h3{font-size:17px;margin:1.6em 0 .35em;color:var(--ink)}
+  p{margin:.6em 0}
+  a{color:var(--accent)}
+  .lede{font-size:18px;color:var(--muted);max-width:66ch}
+  .meta{color:var(--muted);font-size:13.5px;font-family:var(--mono)}
+  ul,ol{padding-left:1.25em;margin:.5em 0}
+  li{margin:.28em 0}
+  code{font-family:var(--mono);font-size:.88em;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:.06em .38em}
+  strong{font-weight:650}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .toc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 22px;columns:2;column-gap:34px}
+  .toc a{display:block;color:var(--ink);text-decoration:none;font-size:14px;padding:3px 0;break-inside:avoid}
+  .toc a:hover{color:var(--accent)}
+  .toc .n{color:var(--accent);font-family:var(--mono);font-size:12px;margin-right:6px}
+  @media(max-width:640px){.toc{columns:1}}
+  .callout{border-radius:12px;padding:14px 18px;margin:16px 0;border:1px solid;font-size:15px}
+  .callout .tag{font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px}
+  .c-decide{background:var(--info-bg);border-color:color-mix(in srgb,var(--info) 40%,transparent)}
+  .c-decide .tag{color:var(--info)}
+  .c-risk{background:var(--crit-bg);border-color:color-mix(in srgb,var(--crit) 40%,transparent)}
+  .c-risk .tag{color:var(--crit)}
+  .c-assume{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+  .c-assume .tag{color:var(--warn)}
+  .c-note{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+  .c-note .tag{color:var(--accent)}
+  .tbl-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:var(--surface2);font-weight:650;font-size:12.5px;letter-spacing:.02em;color:var(--muted)}
+  tr:last-child td{border-bottom:none}
+  td code{white-space:nowrap}
+  .pill{display:inline-block;font-size:11.5px;font-weight:650;padding:2px 9px;border-radius:999px;line-height:1.5;white-space:nowrap}
+  .p-ok{background:var(--ok-bg);color:var(--ok)} .p-warn{background:var(--warn-bg);color:var(--warn)}
+  .p-crit{background:var(--crit-bg);color:var(--crit)} .p-info{background:var(--info-bg);color:var(--info)}
+  .p-standby{background:var(--standby-bg);color:var(--standby)} .p-muted{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+  figure{margin:22px 0}
+  .mermaid{background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:16px;overflow-x:auto;text-align:center}
+  figcaption{color:var(--muted);font-size:13px;margin-top:8px;text-align:center}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .kpi .l{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .verdict{background:linear-gradient(180deg,var(--accent-soft),transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:16px;padding:22px 24px;margin:20px 0}
+  hr{border:none;border-top:1px solid var(--border);margin:2.5em 0}
+  .foot{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid var(--border);padding-top:18px}
+  .legend{font-size:12.5px;color:var(--muted);font-family:var(--mono)}
+</style>
+
+<div class="wrap">
+
+<div class="eyebrow">Rise Live Infrastructure · Vòng R0</div>
+<h1>Nền tảng điều hành Livestream YouTube quy mô lớn</h1>
+<p class="lede">Đánh giá tính khả thi, kiến trúc mục tiêu và lộ trình triển khai — tích hợp với Rise Work. Tài liệu này <strong>chưa phải bản thiết kế thi công</strong>; đây là đầu ra R0 để Chủ Rise Group duyệt trước khi làm pilot.</p>
+<p class="meta">Miền: live.<TEN-MIEN-CUA-BAN> · <strong>Chưa code R1.</strong></p>
+<div class="kpis" style="margin-top:10px">
+  <div class="kpi"><div class="v" style="font-size:15px;color:var(--ok)">REVIEWED</div><div class="l">R0 Architecture</div></div>
+  <div class="kpi"><div class="v" style="font-size:15px;color:var(--warn)">IN PROGRESS</div><div class="l">Operational Inventory</div></div>
+  <div class="kpi"><div class="v" style="font-size:15px;color:var(--muted)">WAITING</div><div class="l">R1 Pilot — chờ inventory &amp; benchmark</div></div>
+</div>
+
+<div class="verdict">
+<div class="eyebrow" style="color:var(--accent)">Kết luận nhanh</div>
+<p style="margin:.4em 0 0;font-size:17px"><strong>Khả thi — nhưng khả thi CÓ ĐIỀU KIỆN.</strong> Mô hình "website là trung tâm điều hành, FFmpeg chạy trên đội Worker tách rời" là kiến trúc chuẩn của các dịch vụ 24/7 chuyên nghiệp — hoàn toàn dựng được và Rise <strong>tự chủ</strong> được. Điểm quyết định KHÔNG nằm ở phần mềm điều phối (việc này chắc chắn làm được), mà ở <strong>3 giới hạn vật lý phải đo thật</strong>: băng thông đầu ra (egress), năng lực thật của mỗi Worker theo từng profile, và độ phức tạp của failover khi có sự cố cụm. Con số "bao nhiêu luồng / 1 máy" và "500 luồng" <strong>không thể chốt trên giấy</strong> — bắt buộc benchmark + soak test + chaos test theo đúng lộ trình R1→R4.</p>
+</div>
+
+<div class="callout c-note" style="margin-top:20px"><span class="tag">Đã chốt ở R0 (Chủ Rise Group · tích chọn khuyến nghị)</span>
+<ul style="margin:.3em 0">
+  <li><strong>YouTube:</strong> đẩy RTMP bằng stream key (pilot) — không đụng quota API. Cân thêm API khi lên quy mô.</li>
+  <li><strong>Lưu trữ:</strong> mua object storage S3-compatible (managed) — bền, ít vận hành.</li>
+  <li><strong>DB + hàng đợi:</strong> thuê dịch vụ quản lý (managed) — Rise vẫn tự chủ logic điều phối.</li>
+  <li><strong>Nối Rise Work:</strong> SSO đăng nhập chung + nhúng bảng tổng quan luồng vào Rise Work.</li>
+  <li><strong>Mô hình quyền:</strong> pilot làm GỌN (Quản trị/Vận hành + Người xem theo phạm vi); RBAC chi tiết để sau.</li>
+  <li><strong>Đường hướng lõi:</strong> lớp <em>phát luồng</em> (Worker) tự host trên VPS Rise, ĐA nhà cung cấp (giữ tự chủ nơi quan trọng nhất); lớp <em>hỗ trợ</em> (DB/queue/storage) dùng managed để nhẹ vận hành.</li>
+</ul>
+</div>
+
+<h2 id="toc" style="border:none;padding-top:0">Mục lục</h2>
+<nav class="toc">
+  <a href="#s1"><span class="n">1</span>Đánh giá tính khả thi</a>
+  <a href="#s2"><span class="n">2</span>Giả định cần xác minh</a>
+  <a href="#inv"><span class="n">2b</span>Kiểm kê hiện trạng (số thật)</a>
+  <a href="#s3"><span class="n">3</span>Kiến trúc tổng thể</a>
+  <a href="#s4"><span class="n">4</span>Control Plane &amp; Worker</a>
+  <a href="#s5"><span class="n">5</span>Data model sơ bộ</a>
+  <a href="#s6"><span class="n">6</span>Mô hình trạng thái luồng</a>
+  <a href="#s7"><span class="n">7</span>Thuật toán Scheduler</a>
+  <a href="#s8"><span class="n">8</span>Mô hình quyền</a>
+  <a href="#s9"><span class="n">9</span>Bảo mật secret</a>
+  <a href="#s10"><span class="n">10</span>Upload file lớn</a>
+  <a href="#s11"><span class="n">11</span>Chuẩn hóa video</a>
+  <a href="#s12"><span class="n">12</span>Cache &amp; phân phối file</a>
+  <a href="#s13"><span class="n">13</span>Giám sát &amp; tự phục hồi</a>
+  <a href="#s14"><span class="n">14</span>Kịch bản failover</a>
+  <a href="#s15"><span class="n">15</span>Cấu hình pilot (R1)</a>
+  <a href="#s16"><span class="n">16</span>Quyết định (đã chốt &amp; còn mở)</a>
+  <a href="#s17"><span class="n">17</span>Tái sử dụng từ Rise Work</a>
+  <a href="#s18"><span class="n">18</span>Bắt buộc tách khỏi Rise Work</a>
+  <a href="#s19"><span class="n">19</span>Khối lượng &amp; thứ tự triển khai</a>
+  <a href="#s20"><span class="n">20</span>Rủi ro chờ benchmark</a>
+  <a href="#s21"><span class="n">21</span>Đối chiếu hệ thật (ShineONLIVE)</a>
+</nav>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1"><span class="num">1.</span>Đánh giá tính khả thi</h2>
+<p>Bản chất Rise Live là một hệ <strong>VOD-to-Live</strong> quy mô lớn: phát file/playlist đã dựng sẵn ra YouTube RTMP 24/7 hoặc theo lịch, không phải encode camera thời gian thực. Đây là bài toán đã được giải nhiều lần trong ngành (đó chính là thứ livetop.vn và các panel đang bán). Việc Rise tự dựng để tự chủ là hợp lý và làm được.</p>
+<p><strong>Phần chắc chắn khả thi</strong> (rủi ro thấp, chỉ là công sức):</p>
+<ul>
+  <li>Control Plane điều phối trạng thái mong muốn → phát lệnh → nhận heartbeat. Đây là pattern quen thuộc (giống Kubernetes control loop, nhưng đơn giản hơn nhiều).</li>
+  <li>Worker Agent chạy FFmpeg trong process/container riêng, tự phục hồi có ngưỡng.</li>
+  <li>Giám sát 3 lớp, scheduler theo tài nguyên, audit log, RBAC theo hồ sơ Rise Work.</li>
+  <li>Upload resumable + chuẩn hóa bằng ffprobe/FFmpeg trên farm tách rời.</li>
+</ul>
+<p><strong>Phần khả thi nhưng phụ thuộc số đo</strong> (rủi ro trung bình–cao, phải benchmark):</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Ràng buộc vật lý</th><th>Vì sao là điểm nghẽn thật</th><th>Chỉ chốt được sau khi…</th></tr></thead>
+<tbody>
+<tr><td><strong>Băng thông đầu ra</strong></td><td>500 luồng × bitrate = tổng egress khổng lồ. Ví dụ minh họa (chưa phải cam kết): 500 luồng trung bình ~8 Mbps ≈ <strong>4 Gbps egress liên tục 24/7</strong> ≈ ~1.3 PB/tháng. Đây thường là <em>trần thật</em> của hệ, không phải CPU.</td><td>Đo bitrate thật + uplink thật/VPS (1Gbps "share" rất khác 1Gbps cam kết) + giá/chính sách egress của provider.</td></tr>
+<tr><td><strong>Năng lực /Worker /profile</strong></td><td>Loop file 1080p (copy codec, không encode) rất nhẹ; nhưng nếu phải transcode realtime hoặc phát 4K thì tải CPU/GPU tăng bậc thang. "40–60 luồng/máy" chỉ là mốc quy hoạch, không được hard-code.</td><td>Benchmark từng cấu hình máy × từng profile × copy-vs-encode, chạy soak 14 ngày.</td></tr>
+<tr><td><strong>IO ổ đĩa & cache</strong></td><td>Nhiều FFmpeg cùng đọc file lớn/4K từ NVMe → nghẽn IO trước khi hết CPU. 2TB "để chứa" khác 2TB "vừa chứa vừa phục vụ N luồng đọc song song".</td><td>Đo throughput NVMe thật khi N luồng cùng đọc.</td></tr>
+<tr><td><strong>YouTube phía nhận</strong></td><td>Mỗi luồng cần 1 live broadcast + stream key. Nếu dùng YouTube API để tạo/điều phối hàng loạt sẽ đụng <strong>quota</strong>; nếu chỉ đẩy RTMP bằng key tạo tay thì không đụng API nhưng vận hành 500 key thủ công là gánh nặng.</td><td>Rise chốt: dùng API hay key thủ công (Mục 16 · Q7).</td></tr>
+</tbody>
+</table></div>
+<p><strong>Phán quyết:</strong> đi tiếp. Nhưng mọi con số quy mô đều phải "mở khóa" qua benchmark theo từng vòng, không tăng đàn ồ ạt.</p>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2"><span class="num">2.</span>Giả định cần xác minh (trước khi thiết kế chi tiết)</h2>
+<p>Những điều dưới đây tôi <em>đang giả định</em> để vẽ kiến trúc. Sai một cái là đổi thiết kế — nên cần đo/chốt sớm ở R0.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Giả định đang dùng</th><th>Cần xác minh bằng</th></tr></thead>
+<tbody>
+<tr><td>G1</td><td>Nội dung chủ yếu là <strong>phát lại file/playlist</strong> (VOD-to-live), không phải encode nguồn trực tiếp.</td><td>Xác nhận nghiệp vụ; lấy mẫu 20–50 file thật.</td></tr>
+<tr><td>G2</td><td>Đa số luồng phát <strong>copy codec</strong> (file đã chuẩn hóa đúng profile → FFmpeg chỉ remux, gần như không tốn CPU). Transcode realtime là ngoại lệ.</td><td>Thống kê % file đã đạt chuẩn vs cần chuẩn hóa.</td></tr>
+<tr><td>G3</td><td>Chỉ <strong>một phần nhỏ</strong> luồng là 4K; phần lớn 1080p/1440p.</td><td>Thống kê tỉ lệ profile theo kênh.</td></tr>
+<tr><td>G4</td><td>Peak <strong>số luồng đồng thời</strong> gần với tổng số luồng (24/7 chạy liên tục), không có "giờ cao điểm" giảm tải.</td><td>Đo số luồng chạy đồng thời hiện tại theo giờ/ngày.</td></tr>
+<tr><td>G5 <span class="pill p-crit">rủi ro cao</span></td><td>Uplink mỗi VPS đủ cho phần luồng ở mức ≤75%. <strong>Cảnh báo:</strong> provider giá rẻ (VD LowEndViet) thường ghi "1Gbps" nhưng thực tế là <strong>share/fair-use</strong>, không cam kết. Băng thông <em>sustain</em> thật mới quyết định số luồng/máy.</td><td><strong>Benchmark #1 (2 bước):</strong> (a) <code>iperf3</code> tới một endpoint <em>Rise tự kiểm soát</em> để đo uplink cơ sở; (b) sau đó chạy <strong>RTMP thật tới YouTube</strong>, ở <em>nhiều khung giờ</em>, <strong>tăng dần số luồng</strong>, theo dõi health/reconnect/packet loss. iperf tới YouTube là KHÔNG làm được — YouTube chỉ nhận RTMP.</td></tr>
+<tr><td>G6</td><td>Object storage sẽ dùng chuẩn <strong>S3-compatible</strong> (tự host MinIO/Ceph hoặc mua) để tự chủ.</td><td>Rise chốt nhà cung cấp/mô hình (Mục 16 · Q4).</td></tr>
+<tr><td>G7</td><td>Danh tính &amp; cơ cấu tổ chức lấy từ Rise Work qua <strong>SSO dùng chung</strong> (đã chốt); Rise Live có DB runtime riêng. <em>Chưa</em> khẳng định Rise Work hiện đã là OIDC Identity Provider.</td><td>Audit auth hiện tại của Rise Work → chọn cơ chế kỹ thuật (OIDC / token exchange / IdP chung) — Mục 17.</td></tr>
+<tr><td>G8</td><td>"Live nhả" là luồng chạy trong khoảng thời gian/điều kiện vận hành cụ thể, có thể nâng lên 24/7 khi được duyệt.</td><td>Chốt định nghĩa &amp; tên trạng thái chuẩn (Mục 16 · Q1).</td></tr>
+</tbody>
+</table></div>
+<div class="callout c-note"><span class="tag">Nguyên tắc</span>Không hard-code bất kỳ con số năng lực nào. Mọi ngưỡng (luồng/máy, egress/máy, IO) là <em>tham số cấu hình theo từng Worker</em>, điền bằng số benchmark thật.</div>
+
+<!-- ============ Kiểm kê ============ -->
+<h2 id="inv"><span class="num">2b.</span>Kiểm kê hiện trạng (từ 2 dịch vụ Rise đang thuê)</h2>
+<p>Số liệu thật bóc từ dashboard đang dùng — quý hơn ước lượng lý thuyết. Đây là nền để quy hoạch quy mô. <strong>Con số ~200 luồng 24/7 đồng thời và ~10 luồng nhả/ngày là số liệu điều hành CHÍNH THỨC do Chủ Rise Group cung cấp.</strong></p>
+<div class="kpis">
+  <div class="kpi"><div class="v">~200</div><div class="l">luồng 24/7 đồng thời <span title="Chủ Rise Group cung cấp">(chính thức)</span></div></div>
+  <div class="kpi"><div class="v">~10<span style="font-size:14px">/ngày</span></div><div class="l">luồng "nhả" (Chủ Rise cung cấp)</div></div>
+  <div class="kpi"><div class="v">5–20<span style="font-size:14px"> Mbps</span></div><div class="l">bitrate thật (đa số 5, 4K ~20)</div></div>
+  <div class="kpi"><div class="v">5–7 GB<span style="font-size:13px">*</span></div><div class="l">file 4K gốc (*mẫu ban đầu)</div></div>
+</div>
+<div class="callout c-assume"><span class="tag">Số liệu file chưa đại diện</span><strong>5–7 GB chỉ là mẫu quan sát ban đầu, chưa đại diện toàn bộ video 4K.</strong> Cần <strong>kiểm kê 20–50 file</strong> và tính <code>P50/P90/P95</code> về <em>dung lượng, thời lượng, bitrate</em>. <strong>Chưa dùng 5–7 GB</strong> để chốt số luồng cache trên VPS 2 TB — số đó phải ra từ phân bố thật + đo IO.</div>
+<ul>
+  <li><strong>Mục tiêu 500+ = ~2.5× tải 24/7 hiện tại</strong> — không phải con số trên trời; là bài toán nhân rộng từ nền đang chạy.</li>
+  <li><strong>Đã có "chuẩn hoá" trước khi live:</strong> tool desktop (FFmpeg, ưu tiên GPU, fallback x264 CPU) xuất <code>*_ready.mp4</code> — xác nhận quy trình <strong>có bước chuẩn hóa offline</strong>. Việc luồng hiện tại có <em>thực sự</em> phát bằng <strong>copy-codec</strong> hay không sẽ được <strong>kiểm chứng trong benchmark</strong> (không kết luận chỉ vì có file <code>*_ready</code>). Rise Live <strong>đặt mục tiêu dùng copy-codec</strong> đối với <code>MediaVariant</code> đã đạt chuẩn. Farm chuẩn hoá tập trung sẽ thay việc cài tool trên máy nhân sự.</li>
+  <li><strong>Loại live thật:</strong> 24/7 + Public (pub) + "nhả" (thuật ngữ Rise).</li>
+  <li><strong>Hai "bệnh" của công cụ hiện tại — đúng thứ brief muốn tránh:</strong> luồng <strong>restart 46 lần</strong> vẫn hiện "running" (không lộ ốm); dashboard chạy <strong>HTTP trên IP:port</strong> (không bảo mật) và <strong>lộ stream key</strong>. → Rise Live vá bằng giám sát 3 lớp + HTTPS + che key.</li>
+</ul>
+<h3>Quy hoạch số VPS (minh họa — CHỜ benchmark băng thông thật)</h3>
+<p>Giả định trộn: ~85% luồng 5 Mbps + ~15% luồng 20 Mbps → trung bình ~7.25 Mbps/luồng. Chạy an toàn 75% uplink.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Uplink <em>sustain thật</em>/VPS</th><th>Egress an toàn/VPS</th><th>~Luồng/VPS (trộn)</th><th>VPS cho 200 luồng</th><th>VPS cho 500 luồng</th></tr></thead>
+<tbody>
+<tr><td>1 Gbps (cam kết)</td><td>750 Mbps</td><td>~100</td><td>~2–3</td><td>~5–6</td></tr>
+<tr><td>300 Mbps (share hay gặp)</td><td>225 Mbps</td><td>~30</td><td>~7–8</td><td>~17–20</td></tr>
+<tr><td>100 Mbps (share yếu)</td><td>75 Mbps</td><td>~10</td><td>~20+</td><td>~50+</td></tr>
+</tbody>
+</table></div>
+<div class="callout c-assume"><span class="tag">Chưa chốt được số/máy</span>Bảng trên CHỈ để bro thấy độ nhạy. Con số thật phụ thuộc <strong>băng thông sustain</strong> (benchmark #1) + <strong>số nhân CPU</strong> + <strong>IO đọc file</strong> của đúng cấu hình VPS mua. Thêm ≥30% máy dự phòng (giữ 25% headroom + N+1). Provider giá rẻ (LowEndViet…) rất dễ rơi vào hàng "share" — phải iperf trước khi mua số lượng lớn.</div>
+<div class="callout c-note"><span class="tag">Chiến lược Worker pool (theo đề xuất Chủ Rise: chia VPS theo loại live)</span>
+<ul style="margin:.3em 0">
+  <li><code>pool-247</code> — phần lớn máy: luồng chạy lâu, ổn định, warm-standby, dọn cache ít. (~200+ slot)</li>
+  <li><code>pool-nha</code> — ít máy: luồng theo lịch, bursty, dựng/xoá nhanh. (~10–20 slot/ngày)</li>
+  <li>Scheduler <strong>lọc theo pool trước</strong>, rồi <strong>vẫn bin-pack theo tài nguyên</strong> trong pool; cho phép overflow khi 1 pool quá tải.</li>
+  <li>Ngoại lệ giữ nguyên: luồng <strong>Critical</strong> → primary/backup <strong>khác nhà cung cấp/vùng</strong> bất kể pool (chống mất cả cụm 1 nhà).</li>
+</ul>
+</div>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3"><span class="num">3.</span>Kiến trúc tổng thể — 6 khối độc lập</h2>
+<p>Ba mặt phẳng tách bạch: <strong>điều khiển</strong> (control) không bao giờ gánh <strong>dữ liệu</strong> (media), và <strong>giao diện</strong> (web) không bao giờ chạy FFmpeg. Rise Work chỉ là một cổng vào; nó chết thì luồng vẫn chạy.</p>
+<figure>
+<pre class="mermaid">
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#eef3f7','primaryBorderColor':'#7c8ba1','primaryTextColor':'#0e1420','lineColor':'#5f6b7a','fontSize':'13px','clusterBkg':'#f7f9fb','clusterBorder':'#cbd5e1'}}}%%
+flowchart TB
+  subgraph EDGE["Mặt phẳng người dùng (public HTTPS)"]
+    RW["Rise Work<br/>(cổng doanh nghiệp + SSO)"]
+    CC["Rise Live Control Center<br/>live.<TEN-MIEN-CUA-BAN>"]
+  end
+  subgraph CTRL["Mặt phẳng điều khiển (mạng riêng)"]
+    API["Control Plane API<br/>(nhiều instance + LB)"]
+    SCH["Scheduler + Health Engine<br/>(leader election)"]
+    DB[("DB có dự phòng")]
+    Q[["Hàng đợi lệnh bền"]]
+  end
+  subgraph MEDIA["Mặt phẳng dữ liệu (media)"]
+    PREP["Transcode / Prep Farm"]
+    MST[("Master Storage")]
+    RTL[("Ready-to-Live Storage")]
+  end
+  subgraph WORK["Đội Worker phát luồng (nhiều provider/vùng)"]
+    W1["Worker Agent + FFmpeg<br/>+ NVMe cache"]
+    W2["Worker Agent + FFmpeg<br/>+ NVMe cache"]
+    W3["Worker Agent + FFmpeg<br/>+ NVMe cache"]
+  end
+  YT(["YouTube RTMP ingest"])
+
+  CC --> API
+  RW -. "SSO + nhúng" .-> CC
+  API <--> DB
+  SCH --> Q
+  API --> Q
+  SCH <-. heartbeat/metrics .-> W1 & W2 & W3
+  Q -- "lệnh idempotent (mTLS)" --> W1 & W2 & W3
+  PREP --> RTL
+  MST --> PREP
+  RTL == "pull + checksum" ==> W1 & W2 & W3
+  W1 & W2 & W3 == "RTMP push" ==> YT
+</pre>
+<figcaption>Luồng điều khiển (nét mảnh) và luồng dữ liệu media (nét đậm) đi hai đường khác nhau. Mất mặt phẳng điều khiển ngắn hạn → Worker vẫn tiếp tục đẩy RTMP theo cấu hình hiện tại.</figcaption>
+</figure>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Khối</th><th>Vai trò lõi</th><th>Chạy ở đâu</th></tr></thead>
+<tbody>
+<tr><td><strong>1 · Control Center</strong></td><td>Giao diện nhân sự/quản lý: tổng quan, lịch, tạo luồng, file/playlist, cảnh báo, báo cáo.</td><td>Web (Next.js) — chỉ hiển thị &amp; ra lệnh, không xử lý media.</td></tr>
+<tr><td><strong>2 · Control Plane</strong></td><td>Giữ trạng thái mong muốn, lịch, phát lệnh, nhận heartbeat, hòa giải trạng thái thật↔mong muốn.</td><td>Nhiều instance sau LB + DB dự phòng + hàng đợi bền.</td></tr>
+<tr><td><strong>3 · Scheduler &amp; Health</strong></td><td>Chọn Worker theo tài nguyên, ra quyết định failover, đánh giá sức khỏe 3 lớp.</td><td>Tiến trình có leader election (chỉ 1 leader ra quyết định tại một thời điểm).</td></tr>
+<tr><td><strong>4 · Prep/Transcode Farm</strong></td><td>Kiểm tra + chuẩn hóa video về profile chuẩn; tách hẳn khỏi cụm phát.</td><td>Cụm máy CPU/GPU riêng (job queue).</td></tr>
+<tr><td><strong>5 · Storage</strong></td><td>3 lớp: Master → Ready-to-Live → Worker cache.</td><td>Object storage S3-compatible + NVMe cục bộ trên Worker.</td></tr>
+<tr><td><strong>6 · Streaming Workers</strong></td><td>Chạy FFmpeg đẩy RTMP, tự phục hồi có ngưỡng, báo metrics.</td><td>Nhiều VPS/server, nhiều provider/vùng.</td></tr>
+</tbody>
+</table></div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4"><span class="num">4.</span>Control Plane &amp; Worker — cơ chế điều khiển</h2>
+<p>Trái tim hệ thống là một <strong>vòng hòa giải</strong> (reconcile loop): người dùng chỉ khai báo "trạng thái mong muốn" (luồng X phải chạy trên profile Y); hệ thống tự làm cho "trạng thái thật" khớp với nó. Lệnh phải <strong>idempotent</strong> — gửi lại lệnh "start" hai lần không được tạo hai tiến trình.</p>
+<figure>
+<pre class="mermaid">
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#eef3f7','primaryBorderColor':'#7c8ba1','primaryTextColor':'#0e1420','lineColor':'#5f6b7a','fontSize':'13px'}}}%%
+sequenceDiagram
+  participant U as Control Center
+  participant CP as Control Plane
+  participant S as Scheduler(leader)
+  participant W as Worker Agent
+  participant Y as YouTube
+  U->>CP: Đặt trạng thái mong muốn (stream=live, profile=1080p)
+  CP->>S: Yêu cầu xếp Worker
+  S->>S: Chấm điểm Worker theo tài nguyên + anti-affinity
+  S->>CP: Chọn Worker A (idempotencyKey)
+  CP->>W: START(stream, file, key) [mTLS, idempotent]
+  W->>W: Pull file từ Ready-to-Live → cache, verify checksum
+  W->>Y: FFmpeg đẩy RTMP
+  loop mỗi 5–10s
+    W-->>CP: heartbeat (cpu, net, disk, bitrate, fps, ts)
+  end
+  CP->>CP: Hòa giải trạng thái thật ↔ mong muốn
+  Note over W,Y: Mất Control Plane ngắn hạn → W vẫn đẩy RTMP tiếp
+</pre>
+<figcaption>Worker giữ quyền tự trị: nó đăng ký, nhận lệnh, rồi chạy độc lập. Control Plane chỉ "muốn" một trạng thái; Worker "hiện thực hóa" và báo lại.</figcaption>
+</figure>
+<h3>Vì sao Control Plane phải HA</h3>
+<ul>
+  <li><strong>Nhiều instance + LB:</strong> một node chết không làm mất khả năng ra lệnh.</li>
+  <li><strong>DB có dự phòng (primary/replica + failover):</strong> mất DB = mất "bộ nhớ" hệ thống → phải có replica.</li>
+  <li><strong>Hàng đợi lệnh bền (persisted queue):</strong> lệnh không bay hơi khi node restart; Worker xử lý đúng-một-lần nhờ idempotencyKey.</li>
+  <li><strong>Leader election cho Scheduler:</strong> chỉ 1 leader ra quyết định failover, tránh 2 scheduler cùng chuyển 1 luồng → nhân đôi tiến trình.</li>
+</ul>
+<div class="callout c-note"><span class="tag">Bất biến #2</span>Worker phải "sống sót độc lập": khi Control Plane mất kết nối ngắn hạn, Agent tiếp tục giữ FFmpeg chạy theo cấu hình cuối, tự phục hồi trong ngưỡng cục bộ, và đồng bộ lại khi Control Plane trở lại.</div>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5"><span class="num">5.</span>Data model sơ bộ</h2>
+<p>Các thực thể lõi (dùng ID ổn định, không dùng tên/email làm khóa — nhất quán nguyên tắc Rise Work). Chưa chốt schema cuối; đây là bộ khung.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Thực thể</th><th>Trường chính (rút gọn)</th></tr></thead>
+<tbody>
+<tr><td><code>Provider</code></td><td><code>providerId</code>, tên, vùng mặc định, chính sách egress, ghi chú.</td></tr>
+<tr><td><code>Worker</code></td><td><code>workerId</code>, providerId, regionId, ipNội bộ, agentVersion, <code>healthStatus</code>, heartbeatAt, và <strong>năng lực</strong>: <code>networkCapacityMbps</code>, <code>safeNetworkLimitMbps</code>, <code>diskCapacityBytes</code>, <code>safeDiskLimitBytes</code>, <code>cpuCapacity</code>, <code>gpuCapacity</code>, <code>maxProcesses</code>, <code>reservedCapacity</code>.</td></tr>
+<tr><td><code>MediaFile</code></td><td><code>fileId</code>, checksum, dung lượng, thời lượng, resolution, fps, codec, bitrate, audioCodec, sampleRate, pixelFormat, gop, <code>fileStatus</code>, masterKey, readyVariants[], probeReport.</td></tr>
+<tr><td><code>Profile</code></td><td><code>profileId</code>, tên hiển thị (Full HD/2K/4K), codec, resolution, fps, cbrBitrate, gop, audioCodec, audioBitrate, sampleRate, pixelFormat, progressive, <code>technicalOnly</code>(bool).</td></tr>
+<tr><td><code>Playlist</code></td><td><code>playlistId</code>, items[fileId, thứ tự], chế độ loop.</td></tr>
+<tr><td><code>Stream</code> <span class="pill p-info">cấu hình, không chứa lịch sử</span></td><td><code>streamId</code> (ổn định), tên, <code>channelId</code>(Rise Work), <code>unitId</code>, ownerUserId, <code>liveType</code>(247/pub/nha), <code>importance</code>, fileOrPlaylistRef, <code>profileId</code>, <code>streamKeyRef</code>(tham chiếu secret, KHÔNG lưu key thô), recoveryPolicyId, <code>desiredState</code> + <code>scheduleState</code> (xem Mục 6), currentRunId, currentAssignmentId. <strong>KHÔNG nhồi lịch sử</strong> bitrate/FPS/restart/uptime — chúng nằm ở <code>StreamRun</code> + <code>Metric</code> + <code>RecoveryAttempt</code>.</td></tr>
+<tr><td><code>StreamLoad</code></td><td>(nhúng trong Stream) <code>expectedBitrateMbps</code>, <code>storageBytes</code>, <code>cpuWeight</code>, <code>gpuWeight</code>, <code>ioWeight</code>, <code>redundancyMultiplier</code>.</td></tr>
+<tr><td><code>StreamRun</code> / <code>StreamSession</code></td><td>Một LẦN luồng chạy trên một Worker: <code>runId</code>, streamId, workerId, startedAt, endedAt, endReason, restartCountTrongLần, outcome.</td></tr>
+<tr><td><code>StreamAssignment</code></td><td>Ai đang giữ luồng: <code>assignmentId</code>, streamId, workerId, role(primary/backup), state(assigned/active/draining), assignedAt.</td></tr>
+<tr><td><code>ChannelDestination</code></td><td>Đích phát (tách khỏi Stream để 1 kênh có thể nhiều đích): <code>destId</code>, channelId, platform(youtube), ingestUrl, <code>streamKeyRef</code>.</td></tr>
+<tr><td><code>MediaVariant</code></td><td>Bản đã chuẩn hóa theo 1 profile (tách khỏi MediaFile): <code>variantId</code>, fileId, profileId, storageKey, checksum, bytes, verifiedAt.</td></tr>
+<tr><td><code>WorkerCacheEntry</code></td><td>File nào đang nằm cache máy nào: workerId, variantId, bytes, state(caching/ready/evicting), lastUsedAt, pinned.</td></tr>
+<tr><td><code>TranscodeJob</code></td><td>Việc chuẩn hóa: <code>jobId</code>, fileId, targetProfileId, state, progress, cpuOrGpu, startedAt, result.</td></tr>
+<tr><td><code>PreflightCheck</code></td><td>Kiểm tra trước giờ live: <code>checkId</code>, streamId, scheduleId, checklist[], result, ranAt.</td></tr>
+<tr><td><code>RecoveryAttempt</code></td><td>Mỗi lần tự phục hồi (thay cho restartCount nhồi trong Stream): <code>attemptId</code>, streamId, runId, level(1–5), reason, action, result, at.</td></tr>
+<tr><td><code>AlertRule</code> / <code>AlertEvent</code></td><td>Rule: điều kiện + ngưỡng + kênh báo. Event: ruleId, streamId/workerId, mức, mở/đóng, at.</td></tr>
+<tr><td><code>Metric</code> (time-series)</td><td>bitrate/fps/speed/cpu/net/disk theo thời gian → lưu ở <strong>kho time-series riêng</strong> (không nhồi vào DB quan hệ chính).</td></tr>
+<tr><td><code>Schedule</code></td><td><code>scheduleId</code>, streamId, startAt, endAt, lặp lại, preflightBefore, trạng thái.</td></tr>
+<tr><td><code>Incident</code></td><td><code>incidentId</code>, streamId/workerId, loại, mức, nguyên nhân, hành động, mở/đóng, escalationLevel.</td></tr>
+<tr><td><code>Command</code></td><td><code>commandId</code>, <code>idempotencyKey</code>, target, loại (START/STOP/RESTART/MOVE/DRAIN), payload, trạng thái, kết quả.</td></tr>
+<tr><td><code>AuditLog</code></td><td><code>logId</code>, actorUserId, hành động, đối tượng, before/after (mask secret), thời điểm, ip.</td></tr>
+<tr><td><code>SecretRef</code></td><td><code>secretRef</code> → Vault path; giá trị thật KHÔNG nằm trong DB ứng dụng.</td></tr>
+</tbody>
+</table></div>
+
+<!-- ============ 6 ============ -->
+<h2 id="s6"><span class="num">6.</span>Mô hình trạng thái luồng</h2>
+<p>Giao diện <strong>không được</strong> chỉ có <code>running/stopped</code>. Quan trọng: trạng thái KHÔNG phải một trường duy nhất mà là <strong>nhiều trục độc lập</strong>; <code>displayStatus</code> chỉ là <em>giá trị tổng hợp phục vụ giao diện</em>, không lưu như nguồn sự thật. Một luồng 46 lần restart <strong>không bao giờ</strong> hiển thị "xanh bình thường".</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Trục trạng thái</th><th>Ý nghĩa (nguồn sự thật riêng)</th></tr></thead>
+<tbody>
+<tr><td><code>desiredState</code></td><td>Điều người dùng MUỐN: đang-live / đã-dừng / tạm-ngưng. (ý định)</td></tr>
+<tr><td><code>lifecycleState</code></td><td>Vòng đời tiến trình thật: chuẩn-bị / khởi-động / đang-gửi / đã-dừng.</td></tr>
+<tr><td><code>healthState</code></td><td>Sức khỏe media (L2): khỏe / cảnh-báo / mất-tín-hiệu.</td></tr>
+<tr><td><code>youtubeState</code></td><td>Phía YouTube (L3): đang-nhận / lỗi-cấu-hình / không-nhận.</td></tr>
+<tr><td><code>recoveryState</code></td><td>Tự phục hồi: bình-thường / đang-phục-hồi / đang-chuyển-Worker / vượt-ngưỡng.</td></tr>
+<tr><td><code>scheduleState</code></td><td>Theo lịch: chờ-lịch / trong-giờ / hết-giờ.</td></tr>
+<tr><td><code>displayStatus</code> <span class="pill p-info">chỉ để hiển thị</span></td><td><strong>Giá trị TỔNG HỢP</strong> từ 6 trục trên → 1 nhãn cho UI. Không phải nguồn sự thật, không lưu độc lập.</td></tr>
+</tbody>
+</table></div>
+<p>Sơ đồ dưới là hợp của <code>lifecycleState</code> + <code>healthState</code> + <code>recoveryState</code> — thứ người vận hành nhìn thấy qua <code>displayStatus</code>:</p>
+<figure>
+<pre class="mermaid">
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#eef3f7','primaryBorderColor':'#7c8ba1','primaryTextColor':'#0e1420','lineColor':'#5f6b7a','fontSize':'12px'}}}%%
+stateDiagram-v2
+  [*] --> ChoLich: có lịch
+  [*] --> DangChuanBi: thủ công
+  ChoLich --> DangChuanBi: tới giờ preflight
+  DangChuanBi --> DangKhoiDong: file sẵn sàng + Worker nhận
+  DangKhoiDong --> DangGuiDuLieu: FFmpeg chạy
+  DangGuiDuLieu --> YouTubeDangNhan: YT nhận dữ liệu
+  YouTubeDangNhan --> Khoe: bitrate>0 + fps tiến + YT health ok
+  Khoe --> CanhBao: chỉ số suy giảm
+  Khoe --> MatTinHieu: ngừng nhận dữ liệu
+  CanhBao --> Khoe: hồi phục
+  CanhBao --> MatTinHieu: xấu đi
+  MatTinHieu --> DangTuPhucHoi: self-heal
+  DangTuPhucHoi --> DangChuyenWorker: lỗi lặp
+  DangTuPhucHoi --> Khoe: phục hồi
+  DangChuyenWorker --> DangKhoiDong: Worker mới
+  DangTuPhucHoi --> LoiCanNguoi: vượt ngưỡng
+  DangChuyenWorker --> LoiCanNguoi: vượt ngưỡng
+  Khoe --> DaDung: dừng chủ động / hết lịch
+  LoiCanNguoi --> [*]
+  DaDung --> [*]
+</pre>
+<figcaption>Trạng thái hiển thị: Chờ lịch · Đang chuẩn bị · Đang khởi động · Đang gửi dữ liệu · YouTube đang nhận · <span class="pill p-ok">Khỏe</span> · <span class="pill p-warn">Cảnh báo</span> · <span class="pill p-crit">Mất tín hiệu</span> · <span class="pill p-standby">Đang tự phục hồi</span> · Đang chuyển Worker · Đã dừng · <span class="pill p-crit">Lỗi cần người xử lý</span>.</figcaption>
+</figure>
+
+<!-- ============ 7 ============ -->
+<h2 id="s7"><span class="num">7.</span>Thuật toán Scheduler (sơ bộ)</h2>
+<p>Scheduler là bài toán <strong>bin-packing đa chiều có ràng buộc</strong>, không phải đếm luồng. Hai bước: (A) <em>lọc cứng</em> các Worker đủ điều kiện; (B) <em>chấm điểm</em> để chọn máy tốt nhất, luôn chừa ≥25% dự phòng.</p>
+<figure>
+<pre class="mermaid">
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#eef3f7','primaryBorderColor':'#7c8ba1','primaryTextColor':'#0e1420','lineColor':'#5f6b7a','fontSize':'13px'}}}%%
+flowchart TB
+  A["Yêu cầu xếp luồng<br/>(load dự kiến + importance)"] --> B{"Lọc CỨNG mỗi Worker:<br/>net/disk/cpu/gpu/proc<br/>còn trong vùng an toàn?"}
+  B -- "không" --> X["Loại"]
+  B -- "có" --> C{"Ràng buộc anti-affinity:<br/>khác Worker với backup?<br/>khác provider/vùng nếu Critical?<br/>không quá tải 1 đội / 1 điểm lỗi?"}
+  C -- "vi phạm" --> X
+  C -- "đạt" --> D["Chấm điểm:<br/>+ còn nhiều dự phòng<br/>+ đã có file trong cache<br/>+ đúng vùng/provider ưu tiên<br/>− gần ngưỡng an toàn"]
+  D --> E["Chọn Worker điểm cao nhất<br/>giữ ≥25% headroom"]
+  E --> F["Phát lệnh START (idempotent)"]
+</pre>
+<figcaption>Không luồng nào được nhận nếu <em>bất kỳ</em> chiều tài nguyên (băng thông, đĩa, CPU, GPU, số tiến trình) vượt vùng an toàn của Worker.</figcaption>
+</figure>
+<h3>Ràng buộc cứng (không bao giờ vi phạm)</h3>
+<ul>
+  <li>Primary và backup <strong>không</strong> cùng một Worker.</li>
+  <li>Primary/backup của luồng <strong>Critical</strong> ưu tiên khác provider/vùng.</li>
+  <li>Không dồn quá nhiều luồng Critical trên một máy.</li>
+  <li>Không dồn quá nhiều kênh của cùng một đội vào một điểm lỗi.</li>
+  <li>Sau khi xếp, mọi chiều tài nguyên vẫn ≤ <code>safeLimit</code> (mục tiêu vận hành 70–75%).</li>
+</ul>
+
+<!-- ============ 8 ============ -->
+<h2 id="s8"><span class="num">8.</span>Mô hình quyền</h2>
+<p>Kế thừa mô hình hồ sơ Rise Work: <strong>Đơn vị</strong> quyết định phạm vi kênh/dữ liệu; <strong>Vị trí</strong> quyết định quyền thao tác; <strong>Trạng thái</strong> có thể giới hạn. Thêm một vai trò kỹ thuật mới: <strong>Live Operator (IT)</strong>.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Vai trò</th><th>Được làm</th><th>Không được</th></tr></thead>
+<tbody>
+<tr><td><strong>Nhân viên</strong></td><td>Xem luồng trong phạm vi; tạo đề xuất/lịch nếu được giao.</td><td>Đổi cấu hình hạ tầng; xem key rõ.</td></tr>
+<tr><td><strong>Trưởng nhóm</strong></td><td>Quản lý luồng của đội; duyệt lịch; start/stop trong phạm vi; xem sự cố đội.</td><td>Quản lý Worker; chuyển máy.</td></tr>
+<tr><td><strong>Live Operator / IT</strong></td><td>Quản lý Worker; xử lý kỹ thuật; chuyển máy; xem log kỹ thuật; nâng cấp Agent.</td><td>Tự ý đổi chiến lược kênh (nghiệp vụ).</td></tr>
+<tr><td><strong>BLĐ</strong></td><td>Xem toàn hệ thống; duyệt thay đổi quan trọng; xem uptime/năng lực cụm.</td><td>—</td></tr>
+<tr><td><strong>Admin</strong></td><td>Quản trị cấu hình &amp; quyền.</td><td>Mặc định KHÔNG xem stream key dạng rõ nếu không cần.</td></tr>
+</tbody>
+</table></div>
+<div class="callout c-note"><span class="tag">Nguyên tắc key</span>Stream key luôn hiển thị dạng che <code>xxxx-xxxx-****-abcd</code>. Chỉ người có quyền đặc biệt được <em>thay</em> key; không cần cho phép <em>xem lại toàn bộ</em> key của bất kỳ ai.</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="s9"><span class="num">9.</span>Phương án bảo mật secret</h2>
+<ul>
+  <li><strong>Kho secret riêng:</strong> HashiCorp Vault hoặc cloud Secret Manager. Stream key, OAuth token, mật khẩu Worker <strong>không</strong> lưu trong DB ứng dụng — DB chỉ giữ <code>secretRef</code>.</li>
+  <li><strong>Mã hóa:</strong> khi buộc phải lưu (VD token), mã hóa envelope (AES-256-GCM), khóa nằm ở Vault/KMS, chỉ backend giải mã.</li>
+  <li><strong>Che trên UI &amp; log:</strong> không bao giờ trả key/token đầy đủ về frontend; log tự động mask; không ghi secret vào log.</li>
+  <li><strong>Worker ↔ Control Plane:</strong> xác thực bằng <strong>mTLS</strong> hoặc token xoay vòng ngắn hạn; Worker không mở cổng công khai — chỉ nói chuyện qua mạng riêng/VPN.</li>
+  <li><strong>Không IP:port HTTP trần</strong> làm giao diện vận hành. Mọi thứ qua HTTPS + allowlist/VPN.</li>
+</ul>
+
+<!-- ============ 10 ============ -->
+<h2 id="s10"><span class="num">10.</span>Phương án upload file lớn</h2>
+<p>Upload thẳng lên object storage bằng <strong>multipart/resumable</strong>, không đi qua tiến trình web (tránh nghẽn). Trình duyệt xin <em>presigned URL</em> theo từng phần và đẩy trực tiếp.</p>
+<ul>
+  <li>Chia phần (VD 8–64 MB/part); mỗi part có checksum; <strong>chỉ tải lại part lỗi</strong>, không tải lại toàn file.</li>
+  <li>Tiếp tục được sau khi mạng gián đoạn (lưu tiến độ part đã xong); hiện tốc độ + ETA.</li>
+  <li>Checksum toàn file khi ghép; <strong>phát hiện trùng</strong> bằng checksum (không upload lại file đã có).</li>
+  <li>Hỗ trợ nhiều file cùng lúc; miền tách riêng <code>upload.live.<TEN-MIEN-CUA-BAN></code> nếu cần.</li>
+  <li>Upload xong → tự vào hàng đợi kiểm tra (Mục 11), trạng thái "Đang kiểm tra".</li>
+</ul>
+
+<!-- ============ 11 ============ -->
+<h2 id="s11"><span class="num">11.</span>Phương án chuẩn hóa video (Prep Farm)</h2>
+<p>Đây là dây chuyền của <strong>chính Rise</strong> (không phải tool nhà cung cấp). Mục tiêu: đảm bảo file phát ra là "copy codec được" → gần như không transcode realtime trên Worker phát.</p>
+<figure>
+<pre class="mermaid">
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#eef3f7','primaryBorderColor':'#7c8ba1','primaryTextColor':'#0e1420','lineColor':'#5f6b7a','fontSize':'13px'}}}%%
+flowchart LR
+  U["Upload file gốc<br/>→ Master Storage"] --> P["ffprobe: đọc codec/res/fps/<br/>bitrate/gop/audio/pixfmt"]
+  P --> D{"Đã đạt profile?"}
+  D -- "đạt" --> R["Remux nhẹ (nếu cần)<br/>→ Ready-to-Live"]
+  D -- "chưa" --> Q[["Hàng đợi transcode<br/>(CPU/GPU)"]]
+  Q --> T["Transcode về profile chuẩn"]
+  T --> V["Kiểm tra lại đầu ra<br/>(ffprobe + so profile)"]
+  V -- "đạt" --> R
+  V -- "lỗi" --> E["Đánh dấu Lỗi + báo"]
+  R --> RL(["Trạng thái: Sẵn sàng live"])
+</pre>
+<figcaption>Chỉ file <strong>"Sẵn sàng live"</strong> mới được chọn để chạy. Cụm chuẩn hóa tách hẳn khỏi cụm phát — render 4K/video dài không đụng luồng đang chạy.</figcaption>
+</figure>
+
+<!-- ============ 12 ============ -->
+<h2 id="s12"><span class="num">12.</span>Cache &amp; phân phối file — 3 lớp</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Lớp</th><th>Chứa gì</th><th>Quy tắc</th></tr></thead>
+<tbody>
+<tr><td><strong>Master Storage</strong></td><td>File gốc.</td><td>Không dùng trực tiếp để live nếu chưa kiểm tra. Là "bản gốc an toàn".</td></tr>
+<tr><td><strong>Ready-to-Live</strong></td><td>Các biến thể đã chuẩn hóa (1080p/1440p/4K).</td><td>Nguồn chuẩn để Worker kéo về.</td></tr>
+<tr><td><strong>Worker Cache (NVMe)</strong></td><td>File đang chạy &amp; sắp chạy.</td><td>Có thể xóa &amp; tải lại; <strong>không phải nguồn duy nhất</strong>. Dùng tối đa ~75–80% dung lượng, chừa OS/log/temp/chuyển file.</td></tr>
+</tbody>
+</table></div>
+<ul>
+  <li>Worker <strong>pull</strong> từ Ready-to-Live rồi <strong>verify checksum</strong> trước khi phát; sai checksum → tải lại, không phát file hỏng.</li>
+  <li>Luồng <strong>Critical</strong> được <strong>pre-cache ở cả 2 nơi</strong> (primary + backup) để failover không phải chờ tải file.</li>
+  <li>Chính sách dọn cache LRU nhưng <strong>không xóa</strong> file đang live/đặt lịch/đang là bản dự phòng.</li>
+</ul>
+
+<!-- ============ 13 ============ -->
+<h2 id="s13"><span class="num">13.</span>Giám sát 3 lớp &amp; tự phục hồi</h2>
+<p>Không kết luận "khỏe" chỉ vì process FFmpeg còn sống. Sức khỏe là hợp của 3 lớp:</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Lớp</th><th>Kiểm gì</th></tr></thead>
+<tbody>
+<tr><td><strong>L1 · Process</strong></td><td>FFmpeg còn sống? crash? exit code? số lần restart?</td></tr>
+<tr><td><strong>L2 · Media output</strong></td><td>bitrate &gt; 0? fps tiến lên? timestamp thay đổi? còn audio+video? tốc độ ~1x?</td></tr>
+<tr><td><strong>L3 · YouTube</strong></td><td>YT có nhận dữ liệu? stream status? health status? lỗi bitrate/codec/audio/fps/keyframe?</td></tr>
+</tbody>
+</table></div>
+<h3>Thang tự phục hồi (có ngưỡng — Mục 14 vẽ chi tiết)</h3>
+<div class="callout c-note"><span class="tag">Bất biến #8</span>Mọi tự phục hồi phải có: <strong>exponential backoff</strong> · giới hạn restart theo cửa sổ thời gian · chống <strong>restart storm</strong> · không khởi động đồng thời hàng trăm luồng · phân đợt khôi phục, ưu tiên Critical · lưu nguyên nhân + hành động. Vượt ngưỡng → <strong>dừng tự động</strong> và báo người trực (escalation), không restart vô hạn.</div>
+
+<!-- ============ 14 ============ -->
+<h2 id="s14"><span class="num">14.</span>Kịch bản failover</h2>
+<figure>
+<pre class="mermaid">
+%%{init:{'theme':'base','themeVariables':{'primaryColor':'#eef3f7','primaryBorderColor':'#7c8ba1','primaryTextColor':'#0e1420','lineColor':'#5f6b7a','fontSize':'12px'}}}%%
+flowchart TB
+  D["Phát hiện mất dữ liệu (L2/L3)"] --> V["Xác minh process + YT status"]
+  V --> R1["1· Restart tại chỗ<br/>(&lt; 60s mục tiêu)"]
+  R1 -- "còn lỗi" --> R2["2· Tạo process/container mới"]
+  R2 -- "còn lỗi" --> R3["3· Chuyển Worker khác<br/>(&lt; 2–3 phút mục tiêu)"]
+  R3 -- "lỗi theo cụm/tuyến mạng" --> R4["4· Chuyển provider / vùng"]
+  R4 -- "vượt ngưỡng" --> H["5· Dừng tự động<br/>+ báo người trực (escalation)"]
+  R1 -. "mỗi bước: backoff + đếm restart + ghi Incident" .-> R2
+</pre>
+<figcaption>Leo thang từ nhẹ → nặng, mỗi bước có backoff và ngưỡng. Lỗi diện rộng (mất cả provider) nhảy thẳng lên bước chuyển vùng; khôi phục hàng loạt phân đợt, ưu tiên Critical để tránh "bão restart".</figcaption>
+</figure>
+<p>Các kịch bản phải diễn tập (trích Mục XIX): kill FFmpeg · restart/ mất mạng Worker · đầy disk · file hỏng · mất audio · sai keyframe · bitrate bất thường · storage tạm gián đoạn · Control Plane mất 1 node · DB failover · mất 1 provider · 100 luồng cùng cần restart · primary/backup lệch profile · key/token hết hạn.</p>
+
+<!-- ============ 15 ============ -->
+<h2 id="s15"><span class="num">15.</span>Cấu hình pilot (R1)</h2>
+<div class="kpis">
+  <div class="kpi"><div class="v">5–10</div><div class="l">luồng thật</div></div>
+  <div class="kpi"><div class="v">2 + 1</div><div class="l">Worker chính + dự phòng</div></div>
+  <div class="kpi"><div class="v">≥ 14</div><div class="l">ngày soak liên tục</div></div>
+  <div class="kpi"><div class="v">3 lớp</div><div class="l">giám sát đầy đủ</div></div>
+</div>
+<p>Phạm vi R1: Upload → ffprobe → chuẩn hóa → Start/Stop → Scheduler sơ bộ → giám sát 3 lớp → tự restart. <strong>Chạy song song</strong> với dịch vụ đang thuê, chưa thay thế. Mục tiêu R1 là <em>chứng minh vòng đời một luồng chạy đúng &amp; tự phục hồi</em>, và <strong>lấy số benchmark đầu tiên</strong> cho mỗi cấu hình máy/profile.</p>
+
+<!-- ============ 16 ============ -->
+<h2 id="s16"><span class="num">16.</span>Quyết định — đã chốt &amp; còn mở</h2>
+<div class="callout c-note"><span class="tag">Quyết định ĐÃ CHỐT (Chủ Rise Group đã tích chọn — không đổi thành "đề xuất")</span>
+<ul style="margin:.3em 0">
+  <li><strong>YouTube (pilot):</strong> đẩy RTMP bằng stream key — không dùng API ở pilot.</li>
+  <li><strong>Object storage:</strong> mua S3-compatible (managed).</li>
+  <li><strong>DB + hàng đợi:</strong> thuê managed.</li>
+  <li><strong>Nối Rise Work:</strong> SSO đăng nhập chung + nhúng bảng tổng quan luồng.</li>
+  <li><strong>Quyền (pilot):</strong> làm gọn (Quản trị/Vận hành + Người xem theo phạm vi).</li>
+  <li><strong>Chia VPS theo loại live:</strong> pool-247 / pool-nha (xem Mục 2b).</li>
+  <li><strong>Cô lập luồng:</strong> container (Docker) — quyết định kỹ thuật, xem lại nếu benchmark cho thấy overhead cao.</li>
+</ul>
+</div>
+<div class="callout c-decide"><span class="tag">Quyết định CÒN MỞ (thật sự chưa có đáp án)</span>
+<ol style="margin:.3em 0">
+  <li><strong>Thuật ngữ "Live nhả":</strong> chốt định nghĩa chính xác + tên trạng thái chuẩn để khóa trong dữ liệu. (Hiểu tạm: luồng chạy trong khoảng/điều kiện vận hành cụ thể, có thể nâng lên 24/7 nếu được duyệt.)</li>
+  <li><strong>Danh sách provider dự kiến</strong> (VD LowEndViet + tối thiểu 1 nhà khác) — để tính anti-affinity theo vùng/nhà cung cấp thật.</li>
+  <li><strong>GPU hay CPU cho transcode</strong> — mặc định đề xuất CPU (chuẩn hóa chạy nền); chốt sau khi biết % file 4K thật từ kiểm kê.</li>
+  <li><strong>Trực kỹ thuật / SLA nội bộ:</strong> ai trực khi escalation ngoài giờ. Chưa cần ở pilot; chốt ở R3/R4.</li>
+</ol>
+</div>
+
+<!-- ============ 17 ============ -->
+<h2 id="s17"><span class="num">17.</span>Tái sử dụng được từ Rise Work</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Thành phần</th><th>Cách dùng lại</th></tr></thead>
+<tbody>
+<tr><td>Danh tính &amp; đăng nhập</td><td><strong>SSO dùng chung</strong> (đã chốt) — Rise Live không dựng lại hệ đăng nhập. Cơ chế kỹ thuật cụ thể (Rise Work làm OIDC IdP / token exchange / IdP chung) <strong>chọn sau khi audit auth hiện tại</strong> — chưa mặc định Rise Work đã là OIDC provider.</td></tr>
+<tr><td>Cơ cấu tổ chức, đơn vị, phạm vi</td><td>Đồng bộ userId/unit/vị trí/phạm vi quản lý → dùng cho RBAC của Rise Live.</td></tr>
+<tr><td>Kênh &amp; người phụ trách</td><td>Đồng bộ danh sách kênh, chủ kênh → gắn vào Stream.</td></tr>
+<tr><td>Mô hình RBAC theo hồ sơ</td><td>Áp lại triết lý "Đơn vị=phạm vi, Vị trí=quyền".</td></tr>
+<tr><td>Audit log, thông báo, "Việc của tôi"</td><td>Rise Live đẩy sự cố/cảnh báo/việc cần xử lý ngược về Rise Work để nhân sự thấy ở một chỗ.</td></tr>
+<tr><td>Nếp làm việc R0→Rn</td><td>Dùng lại quy trình chia nhỏ, pilot, checkpoint đã quen của dự án.</td></tr>
+</tbody>
+</table></div>
+
+<!-- ============ 18 ============ -->
+<h2 id="s18"><span class="num">18.</span>Bắt buộc tách khỏi Rise Work</h2>
+<div class="callout c-risk"><span class="tag">Không được chung runtime</span>
+<ul style="margin:.3em 0">
+  <li><strong>Control Plane</strong> (backend, DB, queue) — vòng đời và uptime khác hẳn Rise Work; Rise Work lỗi không được kéo sập điều phối.</li>
+  <li><strong>Streaming Workers + Agent</strong> — máy vật lý riêng, nhiều provider.</li>
+  <li><strong>Prep/Transcode Farm</strong> — tải nặng, tách để không đụng web.</li>
+  <li><strong>Object storage &amp; cache</strong> — hệ lưu trữ riêng.</li>
+  <li><strong>Tiến trình FFmpeg</strong> — TUYỆT ĐỐI không chạy trong tiến trình web của Rise Work hay Rise Live frontend (Bất biến).</li>
+</ul>
+</div>
+<p>Chung: danh tính (SSO), cơ cấu tổ chức, kênh, phạm vi dữ liệu — <em>chung dữ liệu định danh, không chung backend runtime</em>.</p>
+
+<!-- ============ 19 ============ -->
+<h2 id="s19"><span class="num">19.</span>Khối lượng &amp; thứ tự triển khai</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Vòng</th><th>Quy mô</th><th>Trọng tâm</th><th>Cổng ra (gate)</th></tr></thead>
+<tbody>
+<tr><td><strong>R0</strong> <span class="pill p-info">đang ở đây</span></td><td>0 luồng</td><td>Kiểm kê hiện trạng · lấy mẫu file · đo bitrate/thời lượng · đếm luồng đồng thời · phân loại 24-7/pub/nhả/Critical · kiến trúc + data model + threat model.</td><td>Chủ Rise duyệt tài liệu này + chốt Mục 16.</td></tr>
+<tr><td><strong>R1</strong></td><td>5–10</td><td>Pilot: 2+1 Worker · upload · ffprobe · chuẩn hóa · start/stop · scheduler sơ bộ · giám sát 3 lớp · tự restart · soak ≥14 ngày.</td><td>Chạy ổn 14 ngày + có số benchmark đầu tiên.</td></tr>
+<tr><td><strong>R2</strong></td><td>30–50</td><td>Nhiều Worker · object storage · cache · warm standby · preflight · alert · báo cáo uptime.</td><td>Failover cơ bản đạt mục tiêu thời gian.</td></tr>
+<tr><td><strong>R3</strong></td><td>100–250</td><td>Nhiều provider · failover theo cụm · primary/backup cho Critical · <strong>chaos testing</strong>.</td><td>Sống sót chaos test; uptime Critical đạt mốc.</td></tr>
+<tr><td><strong>R4</strong></td><td>500+</td><td>HA đầy đủ · N+1/N+2 · YouTube API nếu cần · quota audit · DR plan · runbook.</td><td>Đạt chỉ tiêu Mục XX bền vững.</td></tr>
+</tbody>
+</table></div>
+<p class="legend">Ước lượng công sức chỉ tương đối ở R0: R1 là phần "nặng nhất về nền móng" (dựng Agent + Control Plane + reconcile loop + giám sát). R2–R4 chủ yếu là <em>bền hóa &amp; nhân rộng</em> cái đã đúng ở R1. Không cam kết mốc thời gian tuyệt đối khi chưa có số benchmark.</p>
+
+<!-- ============ 20 ============ -->
+<h2 id="s20"><span class="num">20.</span>Rủi ro kỹ thuật chưa thể kết luận nếu chưa benchmark</h2>
+<div class="callout c-risk"><span class="tag">Trung thực kỹ thuật</span>Những điều dưới đây <strong>KHÔNG</strong> được khẳng định trên giấy — phải benchmark, soak test, chaos test:</div>
+<ul>
+  <li><strong>Số luồng thật/máy</strong> theo từng profile &amp; copy-vs-encode (mốc 40–60 chỉ là quy hoạch, không hard-code).</li>
+  <li><strong>Trần egress thật</strong> của từng provider và tổng băng thông cho 500 luồng (nhiều khả năng đây là <em>trần cứng</em> của cả hệ).</li>
+  <li><strong>Throughput NVMe</strong> khi nhiều luồng cùng đọc file lớn/4K → nghẽn IO trước CPU.</li>
+  <li><strong>Hành vi YouTube</strong> khi tạo/duy trì hàng trăm broadcast (quota, rate limit, reconnection).</li>
+  <li><strong>Chi phí, tốc độ phân phối file về Worker, giới hạn egress/API và độ ổn định của object storage managed</strong> ở quy mô lớn.</li>
+  <li><strong>Độ phức tạp failover cụm</strong> — chuyển hàng chục luồng khi mất 1 provider mà không gây bão restart.</li>
+  <li><strong>Ổn định 24/7 dài hạn</strong> (rò bộ nhớ FFmpeg, trôi timestamp, phân mảnh cache) — chỉ soak test dài mới lộ.</li>
+</ul>
+
+<!-- ============ 21 ============ -->
+<h2 id="s21"><span class="num">21.</span>Đối chiếu hệ thống thật đang chạy (ShineONLIVE — tham khảo)</h2>
+<p>Chủ Rise Group xin được tài liệu kiến trúc của <strong>ShineONLIVE</strong> — một hệ livestream THẬT đang vận hành. Ta chỉ <strong>học cách làm, KHÔNG chép mã nguồn / brand / secret</strong> (đúng lưu ý của họ). Kết quả rất đáng mừng: <strong>kiến trúc R0 khớp đúng hướng thực tế</strong>, và bổ sung được vài kỹ thuật cụ thể.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>ShineONLIVE làm</th><th>Ta học / bổ sung vào R0</th></tr></thead>
+<tbody>
+<tr><td>Pipeline <code>Local/Drive → SSD → FFprobe → Stream Copy → YouTube RTMPS</code></td><td>Trùng khít mô hình Prep → Cache → <strong>copy-codec</strong> của R0.</td></tr>
+<tr><td><strong>Stream Copy mặc định; transcode TẮT ở production</strong></td><td>Xác nhận giả định G2 — đa số phát copy-codec, transcode chỉ là bước offline một lần.</td></tr>
+<tr><td>Nguồn không đạt chuẩn → <strong>CHẶN hoặc chuẩn hóa MỘT LẦN</strong></td><td>= đúng cổng "chỉ file <em>Sẵn sàng live</em> mới chạy" (Mục 11).</td></tr>
+<tr><td><strong>~55 luồng/node là cấu hình THỬ TẢI, không phải cam kết</strong></td><td>Trùng nguyên tắc "không hard-code" + cho 1 mốc thực <strong>~55/máy</strong> (gần mốc quy hoạch 40–60) — vẫn phải benchmark theo cấu hình Rise.</td></tr>
+<tr><td>Recovery: <strong>job ID duy nhất · fast retry · burst jitter · giám sát Recv-Q RTMPS</strong></td><td><strong>MỚI:</strong> thêm <strong>Recv-Q RTMPS</strong> (hàng đợi nhận của socket RTMP) vào giám sát Lớp 2/3 — tín hiệu SỚM khi YouTube nghẽn. "Burst jitter" = rải ngẫu nhiên khi khôi phục hàng loạt (chống bão restart).</td></tr>
+<tr><td>Đổi nguồn đang live theo <strong>prepare-then-cutover</strong> (chỉ chuyển sau COPY READY)</td><td><strong>MỚI:</strong> kỹ thuật cụ thể để <strong>thay file luồng 24/7 KHÔNG gãy</strong> — chuẩn bị + cache nguồn mới, sẵn sàng rồi mới chuyển.</td></tr>
+<tr><td>Live Public kết thúc theo <strong>MEDIA-TIME đã gửi</strong>, không chỉ wall-clock</td><td><strong>MỚI:</strong> kết thúc lịch tính theo lượng media THẬT đã đẩy → chống lệch do buffer/trôi. Đưa vào Live Public.</td></tr>
+<tr><td>Watchdog xử lý cả trạng thái <strong>"recovering"</strong>; RBAC/tenant thực thi ở API</td><td>Xác nhận: không để luồng kẹt mãi ở "đang phục hồi"; enforce quyền ở tầng dữ liệu (Mục 8/17).</td></tr>
+<tr><td>Stack: <strong>Fastify + PostgreSQL + Redis/BullMQ</strong>; token mã hóa</td><td>Một lựa chọn ĐÃ KIỂM CHỨNG cho Control Plane + hàng đợi: <strong>Redis/BullMQ</strong> = hàng đợi lệnh bền. Ta đã chốt DB/queue managed → có thể Postgres managed + Redis/BullMQ.</td></tr>
+<tr><td>SSD local là <strong>NGUỒN PHÁT chính</strong>; R2/S3 là backup</td><td>Sắc thái: họ coi SSD máy phát là nguồn chính. R0 coi Ready-to-Live (object storage) là nguồn chuẩn + cache máy. Cả hai đúng — cân nhắc khi thiết kế cache (có thể ưu tiên đọc SSD, object storage là backup/nguồn nạp).</td></tr>
+</tbody>
+</table></div>
+<div class="callout c-note"><span class="tag">Kết luận đối chiếu</span>Không có gì trong R0 phải làm lại. Hệ thật xác nhận hướng đi + cho <strong>1 mốc dữ liệu thực (~55/node)</strong> và <strong>4 kỹ thuật cụ thể để nhặt</strong> (Recv-Q RTMPS · prepare-then-cutover · kết thúc theo media-time · burst jitter). Vẫn giữ nguyên: <strong>tự benchmark cấu hình Rise + không tái dùng brand/secret của ShineONLIVE.</strong></div>
+
+<hr>
+<div class="verdict">
+<div class="eyebrow" style="color:var(--accent)">Bước kế tiếp</div>
+<p style="margin:.4em 0 0"><strong>Kiến trúc đã được duyệt về nguyên tắc</strong> (approved in principle). Còn lại để đóng R0:</p>
+<p style="margin:.4em 0 0"><strong>1)</strong> Hoàn thành <em>kiểm kê</em> (không cần gửi file cho tôi): trên chính máy/kho của Rise, thống kê 20–50 file → <code>P50/P90/P95</code> về dung lượng, thời lượng, bitrate + tỉ lệ 4K + số luồng đồng thời + danh sách VPS/provider. <strong>2)</strong> Trả lời 4 <em>quyết định còn mở</em> (Mục 16). <strong>3)</strong> Chạy <strong>Benchmark #1</strong> (iperf3 cơ sở + RTMP thật tăng dần) trên 1 VPS mẫu. <strong>4)</strong> Có số → tôi viết <em>cấu hình pilot R1</em>. <strong>Chưa code R1 cho tới khi hoàn thành kiểm kê + cấu hình pilot.</strong></p>
+</div>
+
+<p class="foot">Rise Live · R0 — Architecture <strong>REVIEWED</strong> · Operational Inventory <strong>IN PROGRESS</strong> · R1 Pilot <strong>WAITING</strong> (chờ inventory &amp; benchmark). Không sao chép giao diện/mã nguồn dịch vụ đang thuê — chỉ tham khảo nghiệp vụ. Con số quy mô 200/10 là số điều hành chính thức do Chủ Rise Group cung cấp; các mốc năng lực/máy là quy hoạch, phải benchmark thật trước khi tăng đàn.</p>
+
+</div>

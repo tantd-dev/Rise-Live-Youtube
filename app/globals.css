@@ -1,0 +1,70 @@
+/* CSS toàn cục khôi phục cho Rise Live. Các class rl-* nằm sẵn trong RiseLive.tsx (thẻ <style>),
+   ở đây chỉ bổ sung biến màu + các class chung (card, pill, rowbtn, form, pager...). */
+:root {
+  --bg: #f4f6f9; --card: #fff; --card2: #f8fafc; --surface: #fff; --surface2: #f3f6f9;
+  --ink: #1a2230; --muted: #6b7686; --line: #e3e8ef; --line-soft: #edf1f6; --border: #e3e8ef;
+  --green: #15803d; --amber: #b45309; --red: #b91c1c; --blue: #1d4ed8; --danger: #b91c1c;
+  --sel: #dcf1ef; --sel-ink: #0b6b62;
+  --soft-green: #e7f6ec; --soft-amber: #fdf3e3; --soft-red: #fdecec; --soft-blue: #e6effd;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+a { color: var(--blue); }
+code { background: var(--surface2); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 14px 16px 70px; }
+.topbar { display: flex; align-items: center; gap: 14px; padding: 4px 2px 12px; font-size: 13px; color: var(--muted); }
+.topbar b { color: var(--ink); font-size: 16px; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: #111827; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 13.5px; z-index: 1100; max-width: 90vw; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+.cardhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.cardhead h2 { margin: 0; font-size: 15px; font-weight: 700; }
+.cardmeta { font-size: 12.5px; color: var(--muted); }
+
+button { font-family: inherit; font-size: 13px; cursor: pointer; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+.rowbtn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 11px; font-weight: 600; }
+.rowbtn:hover:not(:disabled) { background: var(--surface2); }
+.primary { display: inline-block; border: 1px solid var(--sel-ink); background: var(--sel-ink); color: #fff; border-radius: 8px; padding: 7px 13px; font-weight: 700; text-decoration: none; }
+.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.small { font-size: 12px; padding: 4px 9px; }
+
+.plain { margin: 6px 0; color: var(--ink); line-height: 1.55; }
+.empty { padding: 18px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; background: var(--card2); }
+.scroll { overflow-x: auto; max-width: 100%; }
+.block { display: block; }
+.tnum { font-variant-numeric: tabular-nums; }
+.k { color: var(--muted); font-size: 12px; }
+.v { font-weight: 600; }
+.warn { color: var(--amber); }
+
+.pill { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--surface2); color: var(--muted); white-space: nowrap; }
+.pill.green { background: var(--soft-green); color: var(--green); }
+.pill.amber { background: var(--soft-amber); color: var(--amber); }
+.pill.red { background: var(--soft-red); color: var(--red); }
+.pill.blue { background: var(--soft-blue); color: var(--blue); }
+.pill.gray { background: var(--surface2); color: var(--muted); }
+
+input, select, textarea { font-family: inherit; font-size: 13.5px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); max-width: 100%; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--sel); border-color: var(--sel-ink); }
+label { font-size: 12.5px; font-weight: 600; }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 12px; align-items: end; }
+.form label { display: flex; flex-direction: column; gap: 4px; }
+.form label.wide { grid-column: 1 / -1; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+tr:hover td { background: var(--card2); }
+
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+.pager label { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.pager select { padding: 3px 6px; }
+.pager-right { display: flex; align-items: center; gap: 10px; }
+.pager-nav { display: flex; gap: 4px; align-items: center; }
+.pager-cur { font-weight: 700; color: var(--ink); }
+.pager-info { white-space: nowrap; }
+
+.ck-rail[data-clickable="1"]:hover { background: var(--card2) !important; }
+@media (max-width: 860px) { .wrap { padding: 10px 8px 60px; } }
