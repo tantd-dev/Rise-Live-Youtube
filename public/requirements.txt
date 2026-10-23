@@ -1,0 +1,9 @@
+# Thu vien Python cho worker Rise Live (public/rise-live-agent.py).
+# Worker chi dung thu vien chuan; 2 cong cu duoi la lenh ngoai de TAI VIDEO TU GOOGLE DRIVE.
+# Google hay doi cach tai Drive -> luon cai ban MOI NHAT (-U), khong ghim ban.
+#
+# Cai:  pip3 install -U -r requirements.txt
+#       (Ubuntu 23.04+ bao "externally-managed-environment" thi them --break-system-packages)
+# File nay duoc phuc vu tai $RISE_LIVE_URL/requirements.txt -> khoi cai VPS va worker tu tai ve.
+yt-dlp>=2025.1.1
+gdown>=5.2.0

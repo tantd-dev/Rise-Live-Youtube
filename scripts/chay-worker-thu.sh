@@ -12,8 +12,8 @@ export RISE_LIVE_URL="${RISE_LIVE_URL:-http://localhost:3000}"
 for c in python3 ffmpeg ffprobe; do
   command -v "$c" >/dev/null || { echo "Thiếu '$c'. Cài: sudo apt update && sudo apt install -y python3 python3-pip ffmpeg"; exit 1; }
 done
-command -v yt-dlp >/dev/null || echo "Cảnh báo: chưa có yt-dlp (cần khi tải video từ Google Drive): pip3 install -U yt-dlp gdown"
-
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
+command -v yt-dlp >/dev/null || echo "Cảnh báo: chưa có yt-dlp (cần khi tải video từ Google Drive): pip3 install -U -r $HERE/public/requirements.txt"
+
 echo "Worker → $RISE_LIVE_URL  (máy: $RISE_LIVE_MACHINE)"
 exec sudo -E python3 "$HERE/public/rise-live-agent.py"

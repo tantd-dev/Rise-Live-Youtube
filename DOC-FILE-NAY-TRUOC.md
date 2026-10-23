@@ -66,7 +66,7 @@ thông máy.
 
 | Đường dẫn | Nội dung |
 |---|---|
-| `public/rise-live-agent.py` | **Worker** (r2.42) — chạy trên mỗi VPS. Một tệp Python, không phụ thuộc thư viện ngoài. Đây là phần đáng đọc nhất. |
+| `public/rise-live-agent.py` | **Worker** (r2.43) — chạy trên mỗi VPS. Một tệp Python, không phụ thuộc thư viện ngoài (yt-dlp/gdown là lệnh ngoài, cài theo `public/requirements.txt`). Đây là phần đáng đọc nhất. |
 | `app/api/live/agent/route.ts` | Nơi worker hỏi/đáp — trái tim của hệ. Đọc tệp này trước tiên ở phía máy chủ. |
 | `app/api/live/` | 13 điểm cuối máy chủ (nhịp tim, ảnh xem-trước, cảnh báo, chuyển máy, nhật ký, SSE, YouTube). |
 | `lib/live-lease.ts` | Cấp / thu quyền phát. Đọc cùng `live-replica.ts` và `app/api/live/failover/`. |

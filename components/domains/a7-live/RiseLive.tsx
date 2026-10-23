@@ -2703,7 +2703,8 @@ find /etc/apt -iname '*esm*' -exec mv {} {}.disabled \; 2>/dev/null || true
 apt update; apt install -y --fix-missing python3 python3-pip ffmpeg speedtest-cli curl wget yt-dlp
 command -v pip3 >/dev/null 2>&1 || apt install -y python3-pip || true
 PIP=pip3; command -v pip3 >/dev/null 2>&1 || PIP="python3 -m pip"
-$PIP install -U yt-dlp gdown || $PIP install -U --break-system-packages yt-dlp gdown || echo 'CANH BAO: pip cai yt-dlp/gdown that bai'
+curl -fsSL "$RISE_LIVE_URL/requirements.txt" -o /root/requirements.txt 2>/dev/null || wget -qO /root/requirements.txt "$RISE_LIVE_URL/requirements.txt" 2>/dev/null || printf 'yt-dlp\\ngdown\\n' >/root/requirements.txt
+$PIP install -U -r /root/requirements.txt || $PIP install -U --break-system-packages -r /root/requirements.txt || echo 'CANH BAO: pip cai yt-dlp/gdown that bai'
 (curl -fsSL https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz -o /tmp/ookla.tgz 2>/dev/null || wget -qO /tmp/ookla.tgz https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz 2>/dev/null) && tar -xzf /tmp/ookla.tgz -C /usr/local/bin speedtest 2>/dev/null || true
 curl -fsSL "$RISE_LIVE_URL/rise-live-agent.py" -o /root/rise-live-agent.py 2>/dev/null || wget -qO /root/rise-live-agent.py "$RISE_LIVE_URL/rise-live-agent.py" 2>/dev/null || python3 -c "import urllib.request; urllib.request.urlretrieve('$RISE_LIVE_URL/rise-live-agent.py','/root/rise-live-agent.py')"
 cat >/root/rise-live.env <<EOF

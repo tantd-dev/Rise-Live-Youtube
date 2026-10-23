@@ -17,7 +17,7 @@ try:
 except Exception:
     pass
 
-AGENT_VERSION = "r2.42"
+AGENT_VERSION = "r2.43"
 URL     = os.environ.get("RISE_LIVE_URL", "").rstrip("/")
 TOKEN   = os.environ.get("RISE_LIVE_TOKEN", "")
 MACHINE = os.environ.get("RISE_LIVE_MACHINE", "")
@@ -187,26 +187,34 @@ def _doc_ban_cong_cu():
     tool_state["gdown"] = bool(shutil.which("gdown"))
     tool_state["updatedAt"] = time.time()
 
-# def _pip_chay():
-#     # Tim cach goi pip: pip3 (chuan) -> python3 -m pip (khi thieu lenh pip3 nhung co module).
-#     # Tra ve list lenh, hoac None neu may KHONG co pip nao ca.
-#     if shutil.which("pip3"):
-#         return ["pip3"]
-#     try:
-#         r = subprocess.run([sys.executable or "python3", "-m", "pip", "--version"], capture_output=True, text=True, timeout=30)
-#         if r.returncode == 0:
-#             return [sys.executable or "python3", "-m", "pip"]
-#     except Exception:
-#         pass
-#     return None
-
 def _pip_chay():
-    # Uu tien pipx de khong sua package do Ubuntu/Debian quan ly.
-    pipx = os.path.expanduser("~/.local/bin/pipx")
+    # Tim cach goi pip. Tra ve list lenh, hoac None neu may KHONG co pip nao ca.
+    #  1) pipx (neu yt-dlp da cai qua pipx) -> khong sua package do Ubuntu/Debian quan ly.
+    #  2) pip3 (chuan)  3) python3 -m pip (khi thieu lenh pip3 nhung co module).
+    # Truoc day CHI tim ~/.local/bin/pipx -> may co pip3 van bi bao "KHONG co pip3" (bao oan).
+    pipx = shutil.which("pipx") or os.path.expanduser("~/.local/bin/pipx")
     if os.path.isfile(pipx):
         return [pipx, "runpip", "yt-dlp"]
-
+    if shutil.which("pip3"):
+        return ["pip3"]
+    try:
+        r = subprocess.run([sys.executable or "python3", "-m", "pip", "--version"], capture_output=True, text=True, timeout=30)
+        if r.returncode == 0:
+            return [sys.executable or "python3", "-m", "pip"]
+    except Exception:
+        pass
     return None
+
+def _goi_can_cai():
+    # Danh sach goi lay tu requirements.txt: canh file worker, hoac tai tu may chu ($RISE_LIVE_URL/requirements.txt).
+    # Khong co file -> dung danh sach mac dinh.
+    req = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
+    if not os.path.isfile(req):
+        try:
+            urllib.request.urlretrieve(URL + "/requirements.txt", req)
+        except Exception:
+            return ["yt-dlp", "gdown"]
+    return ["-r", req]
 
 def _auto_update_tools():
     # Google HAY doi cach tai Drive -> yt-dlp/gdown cu la HONG. Tu cap nhat khi khoi dong + moi ngay
@@ -228,7 +236,7 @@ def _auto_update_tools():
             loi = ""
             for extra in ([], ["--break-system-packages"]):
                 try:
-                    r = subprocess.run([*pip, "install", "-U", *extra, "yt-dlp", "gdown"], capture_output=True, text=True, timeout=600)
+                    r = subprocess.run([*pip, "install", "-U", *extra, *_goi_can_cai()], capture_output=True, text=True, timeout=600)
                     if r.returncode == 0:
                         loi = ""; print("auto-update yt-dlp/gdown OK"); break
                     loi = ((r.stderr or r.stdout or "").strip()[-200:]) or "pip bao loi khong ro"
